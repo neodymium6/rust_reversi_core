@@ -1,3 +1,3 @@
 # rust_reversi_core
 
-rust inplementation of rust-reversi
+rust core inplementation of rust-reversi
