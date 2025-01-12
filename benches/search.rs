@@ -69,7 +69,7 @@ fn get_alpha_beta4_bitmatrix5() -> AlphaBetaSearch {
         0x0018004242001800,
         0x0024420000422400,
     ]);
-    let weights: Vec<i32> = black_box(vec![-1, -1, -1, -2, -2]);
+    let weights: Vec<i32> = black_box(vec![-1, 1, 1, -2, -2]);
     let evaluator = BitMatrixEvaluator::<5>::new(weights, masks);
     AlphaBetaSearch::new(4, Box::new(evaluator))
 }
