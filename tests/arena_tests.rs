@@ -17,7 +17,7 @@ mod tests {
     use players::get_player_path;
 
     #[test]
-    fn test_random_vs_random() {
+    fn random_vs_random() {
         compile_player("random_player");
         let random_player = get_player_path("random_player");
 
@@ -42,7 +42,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arena_odd_games() {
+    fn arena_odd_games() {
         compile_player("random_player");
         let random_player = get_player_path("random_player");
 
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arena_invalid_player() {
+    fn arena_invalid_player() {
         compile_player("random_player");
         let invalid_player = "nonexistent_player".to_string();
         let ranmdom_player = get_player_path("random_player");
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arena_multiple_sessions() {
+    fn arena_multiple_sessions() {
         compile_player("random_player");
         let random_player = get_player_path("random_player");
 
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arena_timeout() {
+    fn arena_timeout() {
         compile_player("slow_player");
         compile_player("random_player");
 
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn test_network_arena_basic() {
+    fn network_arena_basic() {
         compile_player("random_player");
         let random_player = get_player_path("random_player");
 
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn test_network_arena_invalid_game_count() {
+    fn network_arena_invalid_game_count() {
         let result = NetworkArenaServer::new(99, false);
         assert!(matches!(
             result,
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn test_network_arena_invalid_player() {
+    fn network_arena_invalid_player() {
         let invalid_player = vec!["nonexistent_player".to_string()];
 
         let mut server = NetworkArenaServer::new(N_GAMES, false).unwrap();
