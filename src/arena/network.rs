@@ -479,6 +479,21 @@ pub struct NetworkArenaClient {
     command: Vec<String>,
     stats: (usize, usize, usize),
     pieces: (usize, usize),
+    process_b: Option<Arc<Mutex<Child>>>,
+    process_w: Option<Arc<Mutex<Child>>>,
+}
+
+impl Drop for NetworkArenaClient {
+    fn drop(&mut self) {
+        if let Some(process_b) = self.process_b.as_ref() {
+            process_b.lock().unwrap().kill().unwrap();
+            process_b.lock().unwrap().wait().unwrap();
+        }
+        if let Some(process_w) = self.process_w.as_ref() {
+            process_w.lock().unwrap().kill().unwrap();
+            process_w.lock().unwrap().wait().unwrap();
+        }
+    }
 }
 
 impl NetworkArenaClient {
@@ -492,6 +507,8 @@ impl NetworkArenaClient {
             command,
             stats: (0, 0, 0),
             pieces: (0, 0),
+            process_b: None,
+            process_w: None,
         }
     }
 
@@ -547,10 +564,14 @@ impl NetworkArenaClient {
         let mut stream = TcpStream::connect(format!("{}:{}", addr, port))?;
         stream.set_read_timeout(Some(READ_TIMEOUT))?;
 
-        let (mut process_b, mut stdin_b, mut reader_b) =
+        let (process_b, mut stdin_b, mut reader_b) =
             NetworkArenaClient::start_process(&self.command, Turn::Black)?;
-        let (mut process_w, mut stdin_w, mut reader_w) =
+        let process_b = Arc::new(Mutex::new(process_b));
+        self.process_b = Some(process_b.clone());
+        let (process_w, mut stdin_w, mut reader_w) =
             NetworkArenaClient::start_process(&self.command, Turn::White)?;
+        let process_w = Arc::new(Mutex::new(process_w));
+        self.process_w = Some(process_w.clone());
 
         let mut buffer = [0; BUF_SIZE];
         let mut response = String::new();
@@ -659,10 +680,10 @@ impl NetworkArenaClient {
                                         }
                                         stream.write_all(b"ok\n")?;
                                         stream.flush()?;
-                                        process_b.kill()?;
-                                        process_w.kill()?;
-                                        process_b.wait()?;
-                                        process_w.wait()?;
+                                        process_b.lock().unwrap().kill()?;
+                                        process_w.lock().unwrap().kill()?;
+                                        process_b.lock().unwrap().wait()?;
+                                        process_w.lock().unwrap().wait()?;
                                         return Ok(());
                                     }
                                     _ => {
