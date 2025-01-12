@@ -8,6 +8,12 @@ pub struct AlphaBetaSearch {
 }
 
 impl AlphaBetaSearch {
+    /// Create a new AlphaBetaSearch instance.
+    /// # Arguments
+    /// * `max_depth` - The maximum depth of the search tree.
+    /// * `evaluator` - The evaluator to evaluate the board.
+    /// # Returns
+    /// A new AlphaBetaSearch instance.
     pub fn new(max_depth: usize, evaluator: Box<dyn Evaluator>) -> Self {
         Self {
             max_depth,
@@ -52,6 +58,12 @@ impl AlphaBetaSearch {
         }
     }
 
+    /// Get the best move for the given board.
+    /// # Arguments
+    /// * `board` - The board to search the best move.
+    /// # Returns
+    /// * `Some(usize)` - The best move.
+    /// * `None` - player must pass.
     pub fn get_move(&self, board: &Board) -> Option<usize> {
         let mut best_move = None;
         let mut alpha = i32::MIN + 1;
@@ -147,6 +159,17 @@ impl AlphaBetaSearch {
     }
 
     const MARGIN_TIME: f64 = 0.001;
+    /// Get the best move for the given board with iterative deepening.
+    /// # Arguments
+    /// * `board` - The board to search the best move.
+    /// * `timeout` - The timeout duration.
+    /// # Returns
+    /// * `Some(usize)` - The best move.
+    /// * `None` - player must pass.
+    /// # Note
+    /// * The search will stop if the timeout is reached.
+    /// * The field `max_depth` will be ignored.
+    /// * Depth will be increased iteratively from 0.
     pub fn get_move_with_iter_deepening(
         &self,
         board: &Board,

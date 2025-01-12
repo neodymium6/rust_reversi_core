@@ -25,6 +25,13 @@ pub enum Turn {
 }
 
 impl Turn {
+    /// Get the opposite turn
+    /// # Example
+    /// ```
+    /// use rust_reversi_core::board::Turn;
+    /// let turn = Turn::Black;
+    /// assert_eq!(turn.opposite(), Turn::White);
+    /// ```
     pub fn opposite(&self) -> Turn {
         match self {
             Turn::Black => Turn::White,
@@ -135,6 +142,30 @@ impl Default for Board {
 }
 
 impl Board {
+    /// Create a new Board instance
+    /// # Returns
+    /// * `Board` instance
+    /// # Note
+    /// * The initial board state is as follows:
+    /// ```
+    /// use rust_reversi_core::board::Board;
+    /// let board = Board::new();
+    /// assert_eq!(board.to_string().unwrap(), format!(
+    ///  "{}{}{}{}{}{}{}{}{}{}",
+    ///   " |abcdefgh\n",
+    ///   "-+--------\n",
+    ///   "1|--------\n",
+    ///   "2|--------\n",
+    ///   "3|--------\n",
+    ///   "4|---OX---\n",
+    ///   "5|---XO---\n",
+    ///   "6|--------\n",
+    ///   "7|--------\n",
+    ///   "8|--------\n",
+    /// ).as_str());
+    /// ```
+    /// * X: Black, O: White
+    /// * Black goes first
     pub fn new() -> Board {
         Board::default()
     }
@@ -143,20 +174,66 @@ impl Board {
         BITS[pos]
     }
 
+    /// Get the current board state
+    /// # Returns
+    /// * Tuple of (player_board, opponent_board, turn)
+    /// # Example
+    /// ```
+    /// use rust_reversi_core::board::Board;
+    /// let board = Board::new();
+    /// let (player_board, opponent_board, turn) = board.get_board();
+    /// ```
+    /// # Note
+    /// * player_board: Bitboard of the player's stones
+    /// * opponent_board: Bitboard of the opponent's stones
+    /// * turn: Turn of the player
     pub fn get_board(&self) -> (u64, u64, Turn) {
         (self.player_board, self.opponent_board, self.turn)
     }
 
+    /// Get the current turn
+    /// # Returns
+    /// * Turn of the player
     pub fn get_turn(&self) -> Turn {
         self.turn
     }
 
+    /// Set the current board state
+    /// # Arguments
+    /// * `player_board` - Bitboard of the player's stones
+    /// * `opponent_board` - Bitboard of the opponent's stones
+    /// * `turn` - Turn of the player
     pub fn set_board(&mut self, player_board: u64, opponent_board: u64, turn: Turn) {
         self.player_board = player_board;
         self.opponent_board = opponent_board;
         self.turn = turn;
     }
 
+    /// Set the current board state from a string
+    /// # Arguments
+    /// * `board_str` - String representation of the board
+    /// * `turn` - Turn of the player
+    /// # Returns
+    /// * `Result<(), BoardError>` - Ok(()) if successful, Err(BoardError) otherwise
+    /// # Example
+    /// ```
+    /// use rust_reversi_core::board::{Board, Turn};
+    /// let mut board = Board::new();
+    /// board.set_board_str(
+    ///   format!(
+    ///     "{}{}{}{}{}{}{}{}",
+    ///     "--------",
+    ///     "--------",
+    ///     "--OX----",
+    ///     "---XO---",
+    ///     "--OOO---",
+    ///     "--OO----",
+    ///     "---O----",
+    ///     "---X----",
+    ///   ).as_str(),
+    ///   Turn::Black,
+    /// ).unwrap();
+    /// ```
     pub fn set_board_str(&mut self, board_str: &str, turn: Turn) -> Result<(), BoardError> {
         let mut black_board = 0;
         let mut white_board = 0;
@@ -177,6 +254,12 @@ impl Board {
         Ok(())
     }
 
+    /// Get the current board state as a string
+    /// # Returns
+    /// * String representation of the board
+    /// # Note
+    /// * X: Black, O: White
+    /// * format is same as `set_board_str`
     pub fn get_board_line(&self) -> Result<String, BoardError> {
         let mut board_str = String::new();
         let player_char = match self.turn {
@@ -199,6 +282,13 @@ impl Board {
         Ok(board_str)
     }
 
+    /// Get the current board state as a vector of colors
+    /// # Returns
+    /// * Vector of colors
+    /// # Note
+    /// * Color::Black: player's stone
+    /// * Color::White: opponent's stone
+    /// * Color::Empty: empty
     pub fn get_board_vec_black(&self) -> Result<Vec<Color>, BoardError> {
         let mut board_vec = vec![Color::Empty; BOARD_SIZE * BOARD_SIZE];
         for (i, board_vec_elem) in board_vec.iter_mut().enumerate() {
@@ -213,6 +303,13 @@ impl Board {
         Ok(board_vec)
     }
 
+    /// Get the current board state as a vector of colors
+    /// # Returns
+    /// * Vector of colors
+    /// # Note
+    /// * Color::Black: black's stone
+    /// * Color::White: white's stone
+    /// * Color::Empty: empty
     pub fn get_board_vec_turn(&self) -> Result<Vec<Color>, BoardError> {
         let mut board_vec = vec![Color::Empty; BOARD_SIZE * BOARD_SIZE];
         let player_color = match self.turn {
@@ -232,6 +329,13 @@ impl Board {
         Ok(board_vec)
     }
 
+    /// Get the current board state as a matrix of colors
+    /// # Returns
+    /// * Matrix shape of (3, 8, 8)
+    /// # Note
+    /// * fist axis: 0: player's stone, 1: opponent's stone, 2: empty
+    /// * second axis: row
+    /// * third axis: column
     pub fn get_board_matrix(&self) -> Result<Vec<Vec<Vec<i32>>>, BoardError> {
         let mut board_matrix = vec![vec![vec![0; BOARD_SIZE]; BOARD_SIZE]; 3];
         for x in 0..BOARD_SIZE {
@@ -249,14 +353,17 @@ impl Board {
         Ok(board_matrix)
     }
 
+    /// Get the number of player's stones
     pub fn player_piece_num(&self) -> i32 {
         self.player_board.count_ones() as i32
     }
 
+    /// Get the number of opponent's stones
     pub fn opponent_piece_num(&self) -> i32 {
         self.opponent_board.count_ones() as i32
     }
 
+    /// Get the number of black's stones
     pub fn black_piece_num(&self) -> i32 {
         if self.turn == Turn::Black {
             self.player_piece_num()
@@ -265,6 +372,7 @@ impl Board {
         }
     }
 
+    /// Get the number of white's stones
     pub fn white_piece_num(&self) -> i32 {
         if self.turn == Turn::White {
             self.player_piece_num()
@@ -273,10 +381,12 @@ impl Board {
         }
     }
 
+    /// Get the sum of all stones
     pub fn piece_sum(&self) -> i32 {
         self.player_piece_num() + self.opponent_piece_num()
     }
 
+    /// Get the difference of player's stones and opponent's
     pub fn diff_piece_num(&self) -> i32 {
         self.player_piece_num() - self.opponent_piece_num()
     }
@@ -296,6 +406,7 @@ impl Board {
         flip_l << shift | flip_r >> shift
     }
 
+    /// Get the legal moves for the player as a bitboard
     pub fn get_legal_moves(&self) -> u64 {
         let mask = 0x7E_7E_7E_7E_7E_7E_7E_7E & self.opponent_board;
         (Board::get_legal_partial(mask, self.player_board, 1)
@@ -305,6 +416,7 @@ impl Board {
             & !(self.player_board | self.opponent_board)
     }
 
+    /// Get the legal moves for the player as a vector of positions
     pub fn get_legal_moves_vec(&self) -> Vec<usize> {
         let legal_moves = self.get_legal_moves();
         let mut legal_moves_vec = Vec::new();
@@ -316,6 +428,8 @@ impl Board {
         legal_moves_vec
     }
 
+    /// Get the legal moves for the player as a vector of boolean
+    /// * true: legal move, false: illegal move
     pub fn get_legal_moves_tf(&self) -> Vec<bool> {
         let legal_moves = self.get_legal_moves();
         let mut legal_moves_tf = Vec::new();
@@ -325,10 +439,12 @@ impl Board {
         legal_moves_tf
     }
 
+    /// Get if the move is legal
     pub fn is_legal_move(&self, pos: usize) -> bool {
         self.get_legal_moves() & Board::pos2bit(pos) != 0
     }
 
+    /// Get the list of board states after legal moves
     pub fn get_child_boards(&self) -> Option<Vec<Board>> {
         if self.is_pass() {
             return None;
@@ -343,6 +459,9 @@ impl Board {
         Some(child_boards)
     }
 
+    /// Reverse the stones
+    /// # Arguments
+    /// * `pos` - Position to place the stone
     pub fn reverse(&mut self, pos: u64) {
         let mut reversed: u64 = 0;
         let mut mask: u64;
@@ -442,6 +561,14 @@ impl Board {
         self.opponent_board ^= reversed;
     }
 
+    /// Place the stone
+    /// # Arguments
+    /// * `pos` - Position to place the stone
+    /// # Returns
+    /// * `Result<(), BoardError>` - Ok(()) if successful, Err(BoardError) otherwise
+    /// # Note
+    /// * If the move is illegal, return Err(BoardError::InvalidMove)
+    /// * If the position is invalid, return Err(BoardError::InvalidPosition)
     pub fn do_move(&mut self, pos: usize) -> Result<(), BoardError> {
         if pos >= BOARD_SIZE * BOARD_SIZE {
             return Err(BoardError::InvalidPosition);
@@ -457,16 +584,27 @@ impl Board {
         Ok(())
     }
 
+    /// Pass the turn
+    /// # Returns
+    /// * `Result<(), BoardError>` - Ok(()) if successful, Err(BoardError) otherwise
+    /// # Note
+    /// * If there is a legal move, return Err(BoardError::InvalidPass)
+    /// * If the game is over, return Err(BoardError::InvalidPass)
     pub fn do_pass(&mut self) -> Result<(), BoardError> {
-        if self.get_legal_moves() == 0 {
-            swap(&mut self.player_board, &mut self.opponent_board);
-            self.turn = self.turn.opposite();
-        } else {
+        if !self.is_pass() || self.is_game_over() {
             return Err(BoardError::InvalidPass);
         }
+        swap(&mut self.player_board, &mut self.opponent_board);
+        self.turn = self.turn.opposite();
         Ok(())
     }
 
+    /// Get if the player must pass the turn
+    /// # Returns
+    /// * true: must pass, false: must not pass
+    /// # Note
+    /// * If there is a legal move, return false
+    /// * If the game is over, return false
     pub fn is_pass(&self) -> bool {
         let mask_v = 0x7E_7E_7E_7E_7E_7E_7E_7E & self.opponent_board;
         let mask_h = 0x00_FF_FF_FF_FF_FF_FF_00 & self.opponent_board;
@@ -487,6 +625,9 @@ impl Board {
         true
     }
 
+    /// Get if the game is over
+    /// # Returns
+    /// * true: game over, false: game not over
     pub fn is_game_over(&self) -> bool {
         if self.is_pass() {
             let opponent_board = Board {
@@ -501,6 +642,9 @@ impl Board {
         false
     }
 
+    /// Get if the player wins
+    /// # Note
+    /// * If the game is not over, return Err(BoardError::GameNotOverYet)
     pub fn is_win(&self) -> Result<bool, BoardError> {
         if self.is_game_over() {
             Ok(self.player_piece_num() > self.opponent_piece_num())
@@ -509,6 +653,9 @@ impl Board {
         }
     }
 
+    /// Get if the player loses
+    /// # Note
+    /// * If the game is not over, return Err(BoardError::GameNotOverYet)
     pub fn is_lose(&self) -> Result<bool, BoardError> {
         if self.is_game_over() {
             Ok(self.player_piece_num() < self.opponent_piece_num())
@@ -517,6 +664,9 @@ impl Board {
         }
     }
 
+    /// Get if the game is draw
+    /// # Note
+    /// * If the game is not over, return Err(BoardError::GameNotOverYet)
     pub fn is_draw(&self) -> Result<bool, BoardError> {
         if self.is_game_over() {
             Ok(self.player_piece_num() == self.opponent_piece_num())
@@ -525,6 +675,9 @@ impl Board {
         }
     }
 
+    /// Get if the black wins
+    /// # Note
+    /// * If the game is not over, return Err(BoardError::GameNotOverYet)
     pub fn is_black_win(&self) -> Result<bool, BoardError> {
         if self.is_game_over() {
             Ok(self.black_piece_num() > self.white_piece_num())
@@ -533,6 +686,9 @@ impl Board {
         }
     }
 
+    /// Get if the white wins
+    /// # Note
+    /// * If the game is not over, return Err(BoardError::GameNotOverYet)
     pub fn is_white_win(&self) -> Result<bool, BoardError> {
         if self.is_game_over() {
             Ok(self.white_piece_num() > self.black_piece_num())
@@ -541,6 +697,13 @@ impl Board {
         }
     }
 
+    /// Get the winner
+    /// # Returns
+    /// * `Result<Option<Turn>, BoardError>`
+    /// # Note
+    /// * If the game is not over, return Err(BoardError::GameNotOverYet)
+    /// * If the game is draw, return None
+    /// * Otherwise, return the winner
     pub fn get_winner(&self) -> Result<Option<Turn>, BoardError> {
         if self.is_game_over() {
             if self.is_win().unwrap() {
@@ -555,6 +718,11 @@ impl Board {
         }
     }
 
+    /// Get random move
+    /// # Returns
+    /// * `Result<usize, BoardError>`
+    /// # Note
+    /// * If there is no legal move, return Err(BoardError::NoLegalMove)
     pub fn get_random_move(&self) -> Result<usize, BoardError> {
         let legal_moves_vec = self.get_legal_moves_vec();
         if legal_moves_vec.is_empty() {
@@ -564,6 +732,12 @@ impl Board {
         Ok(legal_moves_vec[random_index])
     }
 
+    /// Convert the board state to a string
+    /// # Returns
+    /// * String representation of the board
+    /// # Note
+    /// * X: Black, O: White
+    /// * this is used for fmt::Display
     pub fn to_string(&self) -> Result<String, BoardError> {
         let mut board_str = String::new();
         let player_char = match self.turn {

@@ -397,8 +397,20 @@ pub struct NetworkArenaServer {
     client_manager: ClientManager,
     show_progress: bool,
 }
-
 impl NetworkArenaServer {
+    /// Create a new NetworkArenaServer
+    /// # Arguments
+    /// * `game_per_iter` - Number of games to play in each iteration
+    /// * `show_progress` - Show progress of the games
+    /// # Returns
+    /// * `Result<NetworkArenaServer, NetworkArenaServerError>` - The new NetworkArenaServer
+    /// # Example
+    /// ```
+    /// use rust_reversi_core::arena::NetworkArenaServer;
+    /// let mut server = NetworkArenaServer::new(100, true).unwrap();
+    /// ```
+    /// # Note
+    /// * `game_per_iter` must be an even number
     pub fn new(game_per_iter: usize, show_progress: bool) -> Result<Self, NetworkArenaServerError> {
         if game_per_iter % 2 != 0 {
             return Err(NetworkArenaServerError::GameNumberInvalid);
@@ -410,6 +422,17 @@ impl NetworkArenaServer {
         })
     }
 
+    /// Start the server
+    /// # Arguments
+    /// * `addr` - IP address to bind
+    /// * `port` - Port to bind
+    /// # Returns
+    /// * `Result<(), NetworkArenaServerError>` - Ok if successful
+    /// # Note
+    /// * The server will keep running until it is stopped
+    /// * The server will play games in batches of `game_per_iter`
+    /// * The server will disconnect clients after each batch
+    /// * The server will clear clients after each batch
     pub fn start(&mut self, addr: String, port: u16) -> Result<(), NetworkArenaServerError> {
         let listener = TcpListener::bind(format!("{}:{}", addr, port))?;
         for stream in listener.incoming() {
@@ -459,6 +482,11 @@ pub struct NetworkArenaClient {
 }
 
 impl NetworkArenaClient {
+    /// Create a new NetworkArenaClient
+    /// # Arguments
+    /// * `command` - Command to run the client
+    /// # Returns
+    /// * `NetworkArenaClient` - The new NetworkArenaClient
     pub fn new(command: Vec<String>) -> Self {
         NetworkArenaClient {
             command,
@@ -509,6 +537,12 @@ impl NetworkArenaClient {
         Ok((process, stdin, reader))
     }
 
+    /// Connect to the server
+    /// # Arguments
+    /// * `addr` - IP address of the server
+    /// * `port` - Port of the server
+    /// # Returns
+    /// * `Result<(), NetworkArenaClientError>` - Ok if successful
     pub fn connect(&mut self, addr: String, port: u16) -> Result<(), NetworkArenaClientError> {
         let mut stream = TcpStream::connect(format!("{}:{}", addr, port))?;
         stream.set_read_timeout(Some(READ_TIMEOUT))?;
@@ -649,10 +683,24 @@ impl NetworkArenaClient {
         }
     }
 
+    /// Get the statistics of the games played
+    /// # Returns
+    /// * `(usize, usize, usize)` - Number of wins, loses and draws
+    /// # Note
+    /// * stats are cumulative
+    /// * stats are not reset after each call to connect
+    /// * stats are reset after each call to new
     pub fn get_stats(&self) -> (usize, usize, usize) {
         self.stats
     }
 
+    /// Get the number of pieces played in the games
+    /// # Returns
+    /// * `(usize, usize)` - Number of pieces played by player and opponent
+    /// # Note
+    /// * pieces are cumulative
+    /// * pieces are not reset after each call to connect
+    /// * pieces are reset after each call to new
     pub fn get_pieces(&self) -> (usize, usize) {
         self.pieces
     }

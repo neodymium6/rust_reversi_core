@@ -22,6 +22,26 @@ type ProcessResult = Result<(ProcessTuple, ProcessTuple), ArenaError>;
 type ProcessPair = (Child, Child);
 type PlayerPair = (ProcessPlayer, ProcessPlayer);
 impl LocalArena {
+    /// Create a new LocalArena instance
+    /// # Arguments
+    /// * `command1` - Command to start the first player
+    /// * `command2` - Command to start the second player
+    /// * `show_progress` - Show progress bar
+    /// # Returns
+    /// * `LocalArena` instance
+    /// # Example
+    /// ```
+    /// use rust_reversi_core::arena::LocalArena;
+    /// let command1 = vec!["./player1".to_string()];
+    /// let command2 = vec!["./player2".to_string()];
+    /// let show_progress = true;
+    /// let arena = LocalArena::new(command1, command2, show_progress);
+    /// ```
+    /// # Note
+    /// * The command should be a vector of strings
+    /// * The first element of the vector should be the path to the executable
+    /// * The rest of the elements are arguments to the executable
+    /// * The player should print "pong" after receiving "ping" to confirm the connection
     pub fn new(command1: Vec<String>, command2: Vec<String>, show_progress: bool) -> Self {
         LocalArena {
             command1,
@@ -107,6 +127,13 @@ impl LocalArena {
         ))
     }
 
+    /// Play n games between the two players
+    /// # Arguments
+    /// * `n` - Number of games to play
+    /// # Returns
+    /// * `Result<(), ArenaError>` - Ok(()) if successful, Err(ArenaError) otherwise
+    /// # Note
+    /// * n should be a positive even number
     pub fn play_n(&mut self, n: usize) -> Result<(), ArenaError> {
         let (mut processes, players) = self.get_players()?;
 
@@ -139,10 +166,24 @@ impl LocalArena {
         Ok(())
     }
 
+    /// Get the statistics of the games played
+    /// # Returns
+    /// * `(usize, usize, usize)` - Number of wins for player 1, player 2 and draws
+    /// # Note
+    /// * stats are cumulative
+    /// * stats are not reset after each call to play_n
+    /// * stats are reset after each call to new
     pub fn get_stats(&self) -> (usize, usize, usize) {
         self.stats
     }
 
+    /// Get the number of pieces played in the games
+    /// # Returns
+    /// * `(usize, usize)` - Number of pieces played by player 1 and player 2
+    /// # Note
+    /// * pieces are cumulative
+    /// * pieces are not reset after each call to play_n
+    /// * pieces are reset after each call to new
     pub fn get_pieces(&self) -> (usize, usize) {
         self.pieces
     }
