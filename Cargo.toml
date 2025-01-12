@@ -13,6 +13,9 @@ categories = ["games"]
 rand = "0.8.5"
 indicatif = "0.17.9"
 
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
 [[bin]]
 name = "random_player"
 path = "tests/players/random_player.rs"
@@ -28,3 +31,12 @@ path = "tests/players/piece_player.rs"
 [[bin]]
 name = "matrix_player"
 path = "tests/players/matrix_player.rs"
+
+[[bench]]
+name = "board"
+harness = false
+
+[[bench]]
+name = "search"
+harness = false
+
