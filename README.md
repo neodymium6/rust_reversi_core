@@ -1,7 +1,10 @@
 # rust_reversi_core
 
 A Rust library for the game of Reversi (Othello) including game engine, AI players, and arena for playing games.
+
 This is also the core implementation for [rust_reversi](https://github.com/neodymium6/rust_reveri).
+
+See also the [documentation](https://docs.rs/rust_reversi_core).
 
 ## Overview
 
