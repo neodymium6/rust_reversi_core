@@ -3,7 +3,7 @@ mod tests {
     use rust_reversi_core::board::{Board, BoardError, Color, Turn};
 
     #[test]
-    fn test_new_board() {
+    fn new_board() {
         let board = Board::new();
         let (player_board, opponent_board, turn) = board.get_board();
         assert_eq!(player_board, 0x0000000810000000);
@@ -12,7 +12,7 @@ mod tests {
     }
 
     #[test]
-    fn test_initial_piece_count() {
+    fn initial_piece_count() {
         let board = Board::new();
         assert_eq!(board.player_piece_num(), 2);
         assert_eq!(board.opponent_piece_num(), 2);
@@ -23,7 +23,7 @@ mod tests {
     }
 
     #[test]
-    fn test_initial_legal_moves() {
+    fn initial_legal_moves() {
         let board = Board::new();
         let legal_moves = board.get_legal_moves_vec();
         assert_eq!(legal_moves.len(), 4);
@@ -34,7 +34,7 @@ mod tests {
     }
 
     #[test]
-    fn test_do_move() {
+    fn do_move() {
         let mut board = Board::new();
 
         // Make a legal move
@@ -49,7 +49,7 @@ mod tests {
     }
 
     #[test]
-    fn test_invalid_move() {
+    fn invalid_move() {
         let mut board = Board::new();
 
         // Try to make an invalid move
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pass() {
+    fn pass() {
         let mut board = Board::new();
         // Set up a position where Black must pass
         board
@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn test_game_over() -> Result<(), BoardError> {
+    fn game_over() -> Result<(), BoardError> {
         let mut board = Board::new();
         // Set up a completed game position
         board
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn test_board_str_conversion() -> Result<(), BoardError> {
+    fn board_str_conversion() -> Result<(), BoardError> {
         let mut board = Board::new();
         let board_str = "------------------OOO------OX-----OOXX----OX--------------------";
 
@@ -122,7 +122,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_board_vec() -> Result<(), BoardError> {
+    fn get_board_vec() -> Result<(), BoardError> {
         let board = Board::new();
         let board_vec = board.get_board_vec_black()?;
 
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn test_board_clone() {
+    fn board_clone() {
         let board = Board::new();
         let cloned = board.clone();
 
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn test_perft_mode1() {
+    fn perft_mode1() {
         let mut board = Board::new();
         for (depth, &nodes) in PERFT_MODE1.iter().enumerate() {
             assert_eq!(perft1(&mut board, depth as u8), nodes);
@@ -205,7 +205,7 @@ mod tests {
     }
 
     #[test]
-    fn test_perft_mode2() {
+    fn perft_mode2() {
         let mut board = Board::new();
         for (depth, &nodes) in PERFT_MODE2.iter().enumerate() {
             assert_eq!(perft2(&mut board, depth as u8), nodes);
