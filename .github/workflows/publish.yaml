@@ -19,7 +19,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run tests
-        run: cargo test --verbose --skip network
+        run: cargo test --verbose -- --skip network
 
       - name: Publish to crates.io
         run: cargo publish
