@@ -151,4 +151,64 @@ mod tests {
         assert_eq!(opponent_board, cloned_opponent_board);
         assert_eq!(turn, cloned_turn);
     }
+
+    const PERFT_MODE1: [u64; 11] = [
+        1, 4, 12, 56, 244, 1396, 8200, 55092, 390216, 3005288, 24571284,
+    ];
+    const PERFT_MODE2: [u64; 11] = [
+        1, 4, 12, 56, 244, 1396, 8200, 55092, 390216, 3005320, 24571420,
+    ];
+
+    fn perft1(board: &mut Board, depth: u8) -> u64 {
+        if depth == 0 {
+            return 1;
+        }
+        if board.is_game_over() {
+            return 1;
+        }
+        if board.is_pass() {
+            let mut new_board = board.clone();
+            new_board.do_pass().unwrap();
+            return perft1(&mut new_board, depth - 1);
+        }
+        let mut count = 0;
+        for mut board in board.get_child_boards().unwrap() {
+            count += perft1(&mut board, depth - 1);
+        }
+        count
+    }
+    fn perft2(board: &mut Board, depth: u8) -> u64 {
+        if depth == 0 {
+            return 1;
+        }
+        if board.is_game_over() {
+            return 1;
+        }
+        if board.is_pass() {
+            let mut new_board = board.clone();
+            new_board.do_pass().unwrap();
+            return perft2(&mut new_board, depth); // different from perft1
+        }
+        let mut count = 0;
+        for mut board in board.get_child_boards().unwrap() {
+            count += perft2(&mut board, depth - 1);
+        }
+        count
+    }
+
+    #[test]
+    fn test_perft_mode1() {
+        let mut board = Board::new();
+        for (depth, &nodes) in PERFT_MODE1.iter().enumerate() {
+            assert_eq!(perft1(&mut board, depth as u8), nodes);
+        }
+    }
+
+    #[test]
+    fn test_perft_mode2() {
+        let mut board = Board::new();
+        for (depth, &nodes) in PERFT_MODE2.iter().enumerate() {
+            assert_eq!(perft2(&mut board, depth as u8), nodes);
+        }
+    }
 }
