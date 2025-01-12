@@ -84,3 +84,51 @@ impl Evaluator for MatrixEvaluator {
         score
     }
 }
+
+/// Score is calculated by the following bit patterns and weights:
+#[derive(Clone)]
+pub struct BitMatrixEvaluator {
+    weights: Vec<i32>,
+    masks: Vec<u64>,
+}
+impl BitMatrixEvaluator {
+    /// Create a new BitMatrixEvaluator instance.
+    /// # Arguments
+    /// * `weights` - The weights to evaluate the board.
+    /// * `masks` - The bit patterns to evaluate the board.
+    /// # Returns
+    /// A new BitMatrixEvaluator instance.
+    /// # Example
+    /// ```
+    /// use rust_reversi_core::search::BitMatrixEvaluator;
+    /// let weights = vec![10, -1];
+    /// let masks = vec![
+    ///    0x8100000000000081,
+    ///    0x7e7e7e7e7e7e7e7e,
+    /// ];
+    /// let evaluator = BitMatrixEvaluator::new(weights, masks);
+    /// ```
+    /// # Note
+    /// * The length of weights and masks must be the same.
+    /// * Score is added if the piece is player's.
+    /// * Score is subtracted if the piece is opponent's.
+    /// * This evaluator is faster than MatrixEvaluator.
+    /// * If you use symmetry matrix in MatrixEvaluator, you can use faster BitMatrixEvaluator.
+    pub fn new(weights: Vec<i32>, masks: Vec<u64>) -> Self {
+        assert_eq!(weights.len(), masks.len());
+        Self { weights, masks }
+    }
+}
+
+impl Evaluator for BitMatrixEvaluator {
+    fn evaluate(&self, board: &Board) -> i32 {
+        let mut score = 0;
+        for (weight, mask) in self.weights.iter().zip(self.masks.iter()) {
+            let (player_board, opponent_board, _turn) = board.get_board();
+            let player = player_board & mask;
+            let opponent = opponent_board & mask;
+            score += weight * (player.count_ones() as i32 - opponent.count_ones() as i32);
+        }
+        score
+    }
+}
