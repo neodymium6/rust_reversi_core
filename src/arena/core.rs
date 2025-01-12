@@ -118,7 +118,7 @@ where
     }
 
     fn get_move(&mut self) -> Result<usize, GameError> {
-        let turn = self.board.get_board().2;
+        let turn = self.board.get_turn();
         let player = match turn {
             Turn::Black => &mut self.black_player,
             Turn::White => &mut self.white_player,
@@ -151,11 +151,11 @@ where
             }
             let mv = self.get_move()?;
             self.board.do_move(mv).map_err(|e| match e {
-                BoardError::InvalidMove => match self.board.get_board().2 {
+                BoardError::InvalidMove => match self.board.get_turn() {
                     Turn::Black => GameError::BlackInvalidMove,
                     Turn::White => GameError::WhiteInvalidMove,
                 },
-                BoardError::InvalidPosition => match self.board.get_board().2 {
+                BoardError::InvalidPosition => match self.board.get_turn() {
                     Turn::Black => GameError::BlackInvalidMove,
                     Turn::White => GameError::WhiteInvalidMove,
                 },
