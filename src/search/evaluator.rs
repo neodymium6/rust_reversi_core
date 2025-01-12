@@ -87,15 +87,18 @@ impl Evaluator for MatrixEvaluator {
 
 /// Score is calculated by the following bit patterns and weights:
 #[derive(Clone)]
-pub struct BitMatrixEvaluator {
-    weights: Vec<i32>,
-    masks: Vec<u64>,
+pub struct BitMatrixEvaluator<const N: usize> {
+    weights: [i32; N],
+    masks: [u64; N],
+    positive_start: usize,
 }
-impl BitMatrixEvaluator {
+impl<const N: usize> BitMatrixEvaluator<N> {
     /// Create a new BitMatrixEvaluator instance.
     /// # Arguments
     /// * `weights` - The weights to evaluate the board.
     /// * `masks` - The bit patterns to evaluate the board.
+    /// # Type Parameters
+    /// * `N` - The number of weight-mask pairs. This must match the length of input vectors.
     /// # Returns
     /// A new BitMatrixEvaluator instance.
     /// # Example
@@ -106,28 +109,74 @@ impl BitMatrixEvaluator {
     ///    0x8100000000000081,
     ///    0x7e7e7e7e7e7e7e7e,
     /// ];
-    /// let evaluator = BitMatrixEvaluator::new(weights, masks);
+    /// let evaluator = BitMatrixEvaluator::<2>::new(weights, masks);
     /// ```
     /// # Note
-    /// * The length of weights and masks must be the same.
+    /// * The length of weights and masks must be N.
     /// * Score is added if the piece is player's.
     /// * Score is subtracted if the piece is opponent's.
     /// * This evaluator is faster than MatrixEvaluator.
     /// * If you use symmetry matrix in MatrixEvaluator, you can use faster BitMatrixEvaluator.
     pub fn new(weights: Vec<i32>, masks: Vec<u64>) -> Self {
-        assert_eq!(weights.len(), masks.len());
-        Self { weights, masks }
+        assert_eq!(weights.len(), N);
+        assert_eq!(masks.len(), N);
+        let mut weights_array = [0; N];
+        let mut masks_array = [0; N];
+        let mut sorted_masks: Vec<_> = masks.iter().zip(weights.iter()).collect();
+        sorted_masks.sort_by_key(|(_mask, weight)| *weight);
+        let sorted_weights: Vec<i32> = sorted_masks
+            .iter()
+            .map(|(_mask, weight)| **weight)
+            .collect();
+        let sorted_masks: Vec<u64> = sorted_masks
+            .into_iter()
+            .map(|(mask, _weight)| *mask)
+            .collect();
+
+        let mut positive_start = 0;
+        for (i, &weight) in sorted_weights.iter().enumerate() {
+            if weight > 0 {
+                positive_start = i;
+                break;
+            }
+        }
+
+        weights_array.copy_from_slice(&sorted_weights);
+        masks_array.copy_from_slice(&sorted_masks);
+        let mut positive_indecies = Vec::new();
+        let mut negative_indecies = Vec::new();
+        for (i, &weight) in weights_array.iter().enumerate() {
+            match weight.cmp(&0) {
+                std::cmp::Ordering::Greater => positive_indecies.push(i),
+                std::cmp::Ordering::Less => negative_indecies.push(i),
+                std::cmp::Ordering::Equal => (),
+            }
+        }
+        Self {
+            weights: weights_array,
+            masks: masks_array,
+            positive_start,
+        }
     }
 }
 
-impl Evaluator for BitMatrixEvaluator {
+impl<const N: usize> Evaluator for BitMatrixEvaluator<N> {
     fn evaluate(&self, board: &Board) -> i32 {
         let mut score = 0;
-        for (weight, mask) in self.weights.iter().zip(self.masks.iter()) {
-            let (player_board, opponent_board, _turn) = board.get_board();
-            let player = player_board & mask;
-            let opponent = opponent_board & mask;
-            score += weight * (player.count_ones() as i32 - opponent.count_ones() as i32);
+        let (player_board, opponent_board, _turn) = board.get_board();
+        for i in 0..self.positive_start {
+            let player_count = (player_board & self.masks[i]).count_ones() as i32;
+            let opponent_count = (opponent_board & self.masks[i]).count_ones() as i32;
+            for _ in 0..-self.weights[i] {
+                score -= player_count - opponent_count;
+            }
+        }
+        for i in self.positive_start..N {
+            let player_count = (player_board & self.masks[i]).count_ones() as i32;
+            let opponent_count = (opponent_board & self.masks[i]).count_ones() as i32;
+            for _ in 0..self.weights[i] {
+                score += player_count - opponent_count;
+            }
         }
         score
     }

@@ -143,7 +143,7 @@ mod tests {
             0x8100000000000081,
         ];
         let weights: Vec<i32> = vec![-1, -1, -1, -2, -2, -50, 5, 10, -20, 100];
-        let bitmatrix_evaluator = BitMatrixEvaluator::new(weights, masks);
+        let bitmatrix_evaluator = BitMatrixEvaluator::<10>::new(weights, masks);
         let bitmatrix_search = AlphaBetaSearch::new(0, Box::new(bitmatrix_evaluator));
         for _ in 0..1000 {
             let mut board = Board::new();
