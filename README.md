@@ -130,6 +130,28 @@ cargo test
 
 The test suite includes both unit tests and integration tests with example AI players.
 
+## Benchmarking
+
+The project includes benchmarks for core functionality using Criterion:
+
+```bash
+cargo bench
+```
+
+Available benchmarks:
+
+- Board operations (`board` benchmark)
+  - Full game playthrough with random moves
+  
+- Search algorithms (`search` benchmark)
+  - Alpha-beta search with various evaluators (depth 4):
+    - Piece count evaluator
+    - Legal moves evaluator
+    - Matrix-based evaluator
+    - Custom evaluator example
+
+Each evaluator is tested with a small probability (ε=0.01) of making random moves to add variety.
+
 ## License
 
 MIT License
