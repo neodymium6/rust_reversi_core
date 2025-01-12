@@ -146,7 +146,7 @@ impl AlphaBetaSearch {
         best_move
     }
 
-    const MARGIN_TIME: f64 = 0.0005;
+    const MARGIN_TIME: f64 = 0.001;
     pub fn get_move_with_iter_deepening(
         &self,
         board: &Board,
