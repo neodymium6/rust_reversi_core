@@ -14,3 +14,11 @@ path = "tests/players/random_player.rs"
 [[bin]]
 name = "slow_player"
 path = "tests/players/slow_player.rs"
+
+[[bin]]
+name = "piece_player"
+path = "tests/players/piece_player.rs"
+
+[[bin]]
+name = "matrix_player"
+path = "tests/players/matrix_player.rs"
