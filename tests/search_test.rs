@@ -10,6 +10,8 @@ mod tests {
     use rust_reversi_core::arena::LocalArena;
     use rust_reversi_core::board::Board;
     use rust_reversi_core::search::AlphaBetaSearch;
+    use rust_reversi_core::search::BitMatrixEvaluator;
+    use rust_reversi_core::search::MatrixEvaluator;
     use rust_reversi_core::search::PieceEvaluator;
 
     #[test]
@@ -111,6 +113,51 @@ mod tests {
             let elapsed = start.elapsed().as_secs_f64();
             assert!(elapsed < timeout);
             board.do_move(m).unwrap();
+        }
+    }
+
+    #[test]
+    fn bitmatrix_matrix_can_be_same() {
+        let matrix = [
+            [100, -20, 10, 5, 5, 10, -20, 100],
+            [-20, -50, -2, -2, -2, -2, -50, -20],
+            [10, -2, -1, -1, -1, -1, -2, 10],
+            [5, -2, -1, -1, -1, -1, -2, 5],
+            [5, -2, -1, -1, -1, -1, -2, 5],
+            [10, -2, -1, -1, -1, -1, -2, 10],
+            [-20, -50, -2, -2, -2, -2, -50, -20],
+            [100, -20, 10, 5, 5, 10, -20, 100],
+        ];
+        let matrix_evaluator = MatrixEvaluator::new(matrix);
+        let matrix_search = AlphaBetaSearch::new(0, Box::new(matrix_evaluator));
+        let masks: Vec<u64> = vec![
+            0x0000001818000000,
+            0x0000182424180000,
+            0x0000240000240000,
+            0x0018004242001800,
+            0x0024420000422400,
+            0x0042000000004200,
+            0x1800008181000018,
+            0x2400810000810024,
+            0x4281000000008142,
+            0x8100000000000081,
+        ];
+        let weights: Vec<i32> = vec![-1, -1, -1, -2, -2, -50, 5, 10, -20, 100];
+        let bitmatrix_evaluator = BitMatrixEvaluator::new(weights, masks);
+        let bitmatrix_search = AlphaBetaSearch::new(0, Box::new(bitmatrix_evaluator));
+        for _ in 0..1000 {
+            let mut board = Board::new();
+            while !board.is_game_over() {
+                if board.is_pass() {
+                    board.do_pass().unwrap();
+                    continue;
+                }
+                let m1 = matrix_search.get_move(&board).unwrap();
+                let m2 = bitmatrix_search.get_move(&board).unwrap();
+                assert_eq!(m1, m2);
+                let m = board.get_random_move().unwrap();
+                board.do_move(m).unwrap();
+            }
         }
     }
 }
