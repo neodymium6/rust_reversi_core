@@ -1,40 +1,20 @@
 use rust_reversi_core::arena::LocalArena;
 use rust_reversi_core::arena::*;
 use rust_reversi_core::arena::{NetworkArenaClient, NetworkArenaServer};
-use std::path::PathBuf;
-use std::process::Command;
 use std::thread;
 use std::time::Duration;
+
+mod players;
 
 const N_GAMES: usize = 1000;
 const TEST_PORT: u16 = 12345;
 const TEST_PORT2: u16 = 12346;
 
-fn get_player_path(player_name: &str) -> PathBuf {
-    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.push("target");
-    path.push("debug");
-    path.push(player_name);
-    if cfg!(windows) {
-        path.set_extension("exe");
-    }
-    path
-}
-
-fn compile_player(name: &str) {
-    let status = Command::new("cargo")
-        .args(["build", "--bin", name])
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .expect("Failed to execute cargo build");
-
-    assert!(status.success(), "Failed to compile {}", name);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use players::compile_player;
+    use players::get_player_path;
 
     #[test]
     fn test_random_vs_random() {

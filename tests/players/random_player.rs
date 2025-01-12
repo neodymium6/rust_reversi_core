@@ -1,4 +1,3 @@
-#![cfg(not(test))]
 use rust_reversi_core::board::{Board, Turn};
 use std::env;
 
