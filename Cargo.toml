@@ -2,6 +2,12 @@
 name = "rust_reversi_core"
 version = "0.1.0"
 edition = "2021"
+authors = ["neodymium6"]
+license = "MIT"
+description = "A Rust library for the game of Reversi including AI players and arena for playing games."
+repository = "https://github.com/neodymium6/rust_reversi_core"
+keywords = ["game", "reversi", "othello", "ai"]
+categories = ["games"]
 
 [dependencies]
 rand = "0.8.5"
