@@ -143,15 +143,6 @@ impl<const N: usize> BitMatrixEvaluator<N> {
 
         weights_array.copy_from_slice(&sorted_weights);
         masks_array.copy_from_slice(&sorted_masks);
-        let mut positive_indecies = Vec::new();
-        let mut negative_indecies = Vec::new();
-        for (i, &weight) in weights_array.iter().enumerate() {
-            match weight.cmp(&0) {
-                std::cmp::Ordering::Greater => positive_indecies.push(i),
-                std::cmp::Ordering::Less => negative_indecies.push(i),
-                std::cmp::Ordering::Equal => (),
-            }
-        }
         Self {
             weights: weights_array,
             masks: masks_array,
