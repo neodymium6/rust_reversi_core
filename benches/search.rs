@@ -74,6 +74,19 @@ fn get_alpha_beta4_bitmatrix5() -> AlphaBetaSearch {
     AlphaBetaSearch::new(4, Box::new(evaluator))
 }
 
+fn get_alpha_beta4_bitmatrix5n() -> AlphaBetaSearch {
+    let masks: Vec<u64> = black_box(vec![
+        0x0000001818000000,
+        0x0000182424180000,
+        0x0000240000240000,
+        0x0018004242001800,
+        0x0024420000422400,
+    ]);
+    let weights: Vec<i32> = black_box(vec![-1, -1, -1, -2, -2]);
+    let evaluator = BitMatrixEvaluator::<5>::new(weights, masks);
+    AlphaBetaSearch::new(4, Box::new(evaluator))
+}
+
 fn get_alpha_beta4_bitmatrix10() -> AlphaBetaSearch {
     let masks: Vec<u64> = black_box(vec![
         0x0000001818000000,
@@ -98,6 +111,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let alpha_beta4_matrix = get_alpha_beta4_matrix();
     let alpha_beta4_custom = get_alpha_beta4_custom();
     let alpha_beta4_bitmatrix5 = get_alpha_beta4_bitmatrix5();
+    let alpha_beta4_bitmatrix5n = get_alpha_beta4_bitmatrix5n();
     let alpha_beta4_bitmatrix10 = get_alpha_beta4_bitmatrix10();
 
     c.bench_function("alpha_beta4_piece", |b| {
@@ -114,6 +128,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
     c.bench_function("alpha_beta4_bitmatrix5", |b| {
         b.iter(|| play_with_search(&alpha_beta4_bitmatrix5))
+    });
+    c.bench_function("alpha_beta4_bitmatrix5n", |b| {
+        b.iter(|| play_with_search(&alpha_beta4_bitmatrix5n))
     });
     c.bench_function("alpha_beta4_bitmatrix10", |b| {
         b.iter(|| play_with_search(&alpha_beta4_bitmatrix10))
