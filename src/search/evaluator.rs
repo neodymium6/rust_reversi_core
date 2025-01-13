@@ -88,7 +88,7 @@ impl Evaluator for MatrixEvaluator {
 /// Score is calculated by the following bit patterns and weights:
 #[derive(Clone)]
 pub struct BitMatrixEvaluator<const N: usize> {
-    weights: [u32; N],
+    weights: [i32; N],
     masks: [u64; N],
     positive_start: usize,
 }
@@ -133,21 +133,15 @@ impl<const N: usize> BitMatrixEvaluator<N> {
             .map(|(mask, _weight)| *mask)
             .collect();
 
-        let mut positive_start = N;
-        let mut sorted_weights_u32: Vec<u32> = vec![0; N];
+        let mut positive_start = 0;
         for (i, &weight) in sorted_weights.iter().enumerate() {
             if weight > 0 {
                 positive_start = i;
                 break;
             }
-            sorted_weights_u32[i] = (-weight) as u32;
-        }
-        for i in positive_start..N {
-            sorted_weights_u32[i] = sorted_weights[i] as u32;
         }
 
-        // weights_array.copy_from_slice(&sorted_weights);
-        weights_array.copy_from_slice(&sorted_weights_u32);
+        weights_array.copy_from_slice(&sorted_weights);
         masks_array.copy_from_slice(&sorted_masks);
         Self {
             weights: weights_array,
@@ -159,34 +153,22 @@ impl<const N: usize> BitMatrixEvaluator<N> {
 
 impl<const N: usize> Evaluator for BitMatrixEvaluator<N> {
     fn evaluate(&self, board: &Board) -> i32 {
+        let mut score = 0;
         let (player_board, opponent_board, _turn) = board.get_board();
-        let mut score_p = 0;
-        let mut score_n = 0;
         for i in 0..self.positive_start {
-            let player_count = (player_board & self.masks[i]).count_ones();
-            let opponent_count = (opponent_board & self.masks[i]).count_ones();
-            // for _ in 0..-self.weights[i] {
-            //     score -= player_count - opponent_count;
-            // }
-            // weight is negative and converted to positive
-            score_p += self.weights[i] * opponent_count;
-            score_n += self.weights[i] * player_count;
+            let player_count = (player_board & self.masks[i]).count_ones() as i32;
+            let opponent_count = (opponent_board & self.masks[i]).count_ones() as i32;
+            for _ in 0..-self.weights[i] {
+                score -= player_count - opponent_count;
+            }
         }
         for i in self.positive_start..N {
-            let player_count = (player_board & self.masks[i]).count_ones();
-            let opponent_count = (opponent_board & self.masks[i]).count_ones();
-            // for _ in 0..self.weights[i] {
-            //     score += player_count - opponent_count;
-            // }
-            // weight is positive
-            score_p += self.weights[i] * player_count;
-            score_n += self.weights[i] * opponent_count;
+            let player_count = (player_board & self.masks[i]).count_ones() as i32;
+            let opponent_count = (opponent_board & self.masks[i]).count_ones() as i32;
+            for _ in 0..self.weights[i] {
+                score += player_count - opponent_count;
+            }
         }
-        // for i in 0..N {
-        //     let player_count = (player_board & self.masks[i]).count_ones();
-        //     let opponent_count = (opponent_board & self.masks[i]).count_ones();
-        //     score += self.weights[i] * (player_count - opponent_count);
-        // }
-        score_p as i32 - score_n as i32
+        score
     }
 }
