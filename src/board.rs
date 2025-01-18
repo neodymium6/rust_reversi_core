@@ -25,6 +25,7 @@ pub enum Turn {
 }
 
 impl Turn {
+    #[inline]
     /// Get the opposite turn
     /// # Example
     /// ```
@@ -447,12 +448,14 @@ impl Board {
         if self.is_pass() {
             return None;
         }
-        let legal_moves_vec = self.get_legal_moves_vec();
         let mut child_boards = Vec::new();
-        for pos in legal_moves_vec {
-            let mut child_board = self.clone();
-            child_board.do_move(pos).unwrap();
-            child_boards.push(child_board);
+        let legal_moves = self.get_legal_moves();
+        for (i, &bit) in BITS.iter().enumerate() {
+            if legal_moves & bit != 0 {
+                let mut child_board = self.clone();
+                child_board.do_move(i).unwrap();
+                child_boards.push(child_board);
+            }
         }
         Some(child_boards)
     }
@@ -540,6 +543,7 @@ impl Board {
         Ok(())
     }
 
+    #[inline]
     /// Get if the player must pass the turn
     /// # Returns
     /// * true: must pass, false: must not pass
