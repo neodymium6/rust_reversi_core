@@ -170,10 +170,6 @@ impl Board {
         Board::default()
     }
 
-    fn pos2bit(pos: usize) -> u64 {
-        BITS[pos]
-    }
-
     /// Get the current board state
     /// # Returns
     /// * Tuple of (player_board, opponent_board, turn)
@@ -239,8 +235,8 @@ impl Board {
         let mut white_board = 0;
         for (i, c) in board_str.chars().enumerate() {
             match c {
-                LINE_CHAR_BLACK => black_board |= Board::pos2bit(i),
-                LINE_CHAR_WHITE => white_board |= Board::pos2bit(i),
+                LINE_CHAR_BLACK => black_board |= BITS[i],
+                LINE_CHAR_WHITE => white_board |= BITS[i],
                 LINE_CHAR_EMPTY => (),
                 _ => {
                     return Err(BoardError::InvalidCharactor);
@@ -270,8 +266,7 @@ impl Board {
             Turn::Black => LINE_CHAR_WHITE,
             Turn::White => LINE_CHAR_BLACK,
         };
-        for i in 0..BOARD_SIZE * BOARD_SIZE {
-            let pos = Board::pos2bit(i);
+        for &pos in BITS.iter() {
             match (self.player_board & pos, self.opponent_board & pos) {
                 (0, 0) => board_str.push(LINE_CHAR_EMPTY),
                 (_, 0) => board_str.push(player_char),
@@ -292,7 +287,7 @@ impl Board {
     pub fn get_board_vec_black(&self) -> Result<Vec<Color>, BoardError> {
         let mut board_vec = vec![Color::Empty; BOARD_SIZE * BOARD_SIZE];
         for (i, board_vec_elem) in board_vec.iter_mut().enumerate() {
-            let bit = Board::pos2bit(i);
+            let bit = BITS[i];
             *board_vec_elem = match (self.player_board & bit, self.opponent_board & bit) {
                 (0, 0) => Color::Empty,
                 (_, 0) => Color::Black,
@@ -318,7 +313,7 @@ impl Board {
         };
         let opponent_color = player_color.opposite();
         for (i, board_vec_elem) in board_vec.iter_mut().enumerate() {
-            let bit = Board::pos2bit(i);
+            let bit = BITS[i];
             *board_vec_elem = match (self.player_board & bit, self.opponent_board & bit) {
                 (0, 0) => Color::Empty,
                 (_, 0) => player_color,
@@ -341,7 +336,7 @@ impl Board {
         for x in 0..BOARD_SIZE {
             for y in 0..BOARD_SIZE {
                 let i = x * BOARD_SIZE + y;
-                let bit = Board::pos2bit(i);
+                let bit = BITS[i];
                 match (self.player_board & bit, self.opponent_board & bit) {
                     (0, 0) => board_matrix[2][x][y] = 1,
                     (_, 0) => board_matrix[0][x][y] = 1,
@@ -391,6 +386,7 @@ impl Board {
         self.player_piece_num() - self.opponent_piece_num()
     }
 
+    #[inline]
     fn get_legal_partial(watch: u64, player_board: u64, shift: usize) -> u64 {
         let mut flip_l = (player_board << shift) & watch;
         let mut flip_r = (player_board >> shift) & watch;
@@ -420,8 +416,8 @@ impl Board {
     pub fn get_legal_moves_vec(&self) -> Vec<usize> {
         let legal_moves = self.get_legal_moves();
         let mut legal_moves_vec = Vec::new();
-        for i in 0..BOARD_SIZE * BOARD_SIZE {
-            if legal_moves & Board::pos2bit(i) != 0 {
+        for (i, &bit) in BITS.iter().enumerate() {
+            if legal_moves & bit != 0 {
                 legal_moves_vec.push(i);
             }
         }
@@ -433,15 +429,15 @@ impl Board {
     pub fn get_legal_moves_tf(&self) -> Vec<bool> {
         let legal_moves = self.get_legal_moves();
         let mut legal_moves_tf = Vec::new();
-        for i in 0..BOARD_SIZE * BOARD_SIZE {
-            legal_moves_tf.push(legal_moves & Board::pos2bit(i) != 0);
+        for &bit in BITS.iter() {
+            legal_moves_tf.push(legal_moves & bit != 0);
         }
         legal_moves_tf
     }
 
     /// Get if the move is legal
     pub fn is_legal_move(&self, pos: usize) -> bool {
-        self.get_legal_moves() & Board::pos2bit(pos) != 0
+        self.get_legal_moves() & BITS[pos] != 0
     }
 
     /// Get the list of board states after legal moves
@@ -517,7 +513,7 @@ impl Board {
         if pos >= BOARD_SIZE * BOARD_SIZE {
             return Err(BoardError::InvalidPosition);
         }
-        let pos_bit = Board::pos2bit(pos);
+        let pos_bit = BITS[pos];
         if self.is_legal_move(pos) {
             self.reverse(pos_bit);
             swap(&mut self.player_board, &mut self.opponent_board);
@@ -696,7 +692,7 @@ impl Board {
         for i in 0..BOARD_SIZE {
             board_str.push_str(&format!("{}|", i + 1));
             for j in 0..BOARD_SIZE {
-                let pos = Board::pos2bit(i * BOARD_SIZE + j);
+                let pos = BITS[i * BOARD_SIZE + j];
                 match (self.player_board & pos, self.opponent_board & pos) {
                     (0, 0) => board_str.push(LINE_CHAR_EMPTY),
                     (_, 0) => board_str.push(player_char),
