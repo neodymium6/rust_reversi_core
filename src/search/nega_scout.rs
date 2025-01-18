@@ -211,7 +211,7 @@ impl NegaScoutSearch {
         best_move
     }
 
-    const MARGIN_TIME: f64 = 0.001;
+    const MARGIN_TIME: f64 = 0.002;
     /// Get the best move for the given board with iterative deepening.
     /// # Arguments
     /// * `board` - The board to search the best move.
