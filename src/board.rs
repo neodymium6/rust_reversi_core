@@ -462,43 +462,42 @@ impl Board {
     /// * `pos` - Position to place the stone
     pub fn reverse(&mut self, pos: u64) {
         let mut reversed: u64 = 0;
-        const MASKS_L: [u64; 4] = [
-            0xFE_FE_FE_FE_FE_FE_FE_FE, // left
-            0xFF_FF_FF_FF_FF_FF_FF_00, // up
-            0xFE_FE_FE_FE_FE_FE_FE_00, // upper left
-            0x7F_7F_7F_7F_7F_7F_7F_00, // upper right
-        ];
-        const MASKS_R: [u64; 4] = [
-            0x7F_7F_7F_7F_7F_7F_7F_7F, // right
-            0x00_FF_FF_FF_FF_FF_FF_FF, // down
-            0x00_7F_7F_7F_7F_7F_7F_7F, // lower right
-            0x00_FE_FE_FE_FE_FE_FE_FE, // lower left
-        ];
-        const DIR: [usize; 4] = [1, 8, 9, 7];
         // tmp is position of stones to reverse if piece exists on the end of stones to reverse
         // mask is position that exists opponent's stone to reverse from piece on each direction
-        for i in 0..4 {
-            let mut mask = MASKS_L[i] & (pos << DIR[i]);
-            let mut tmp = 0;
-            while mask & self.opponent_board != 0 {
-                tmp |= mask;
-                mask = MASKS_L[i] & (mask << DIR[i]);
-            }
-            if (mask & self.player_board) != 0 {
-                reversed |= tmp;
-            }
+        macro_rules! get_reverse_l {
+            ($mask:expr, $dir:expr) => {
+                let mut mask = $mask & (pos << $dir);
+                let mut tmp = 0;
+                while mask & self.opponent_board != 0 {
+                    tmp |= mask;
+                    mask = $mask & (mask << $dir);
+                }
+                if (mask & self.player_board) != 0 {
+                    reversed |= tmp;
+                }
+            };
         }
-        for i in 0..4 {
-            let mut mask = MASKS_R[i] & (pos >> DIR[i]);
-            let mut tmp = 0;
-            while mask & self.opponent_board != 0 {
-                tmp |= mask;
-                mask = MASKS_R[i] & (mask >> DIR[i]);
-            }
-            if (mask & self.player_board) != 0 {
-                reversed |= tmp;
-            }
+        macro_rules! get_reverse_r {
+            ($mask:expr, $dir:expr) => {
+                let mut mask = $mask & (pos >> $dir);
+                let mut tmp = 0;
+                while mask & self.opponent_board != 0 {
+                    tmp |= mask;
+                    mask = $mask & (mask >> $dir);
+                }
+                if (mask & self.player_board) != 0 {
+                    reversed |= tmp;
+                }
+            };
         }
+        get_reverse_l!(0xFE_FE_FE_FE_FE_FE_FE_FE, 1); // left
+        get_reverse_l!(0xFF_FF_FF_FF_FF_FF_FF_00, 8); // up
+        get_reverse_l!(0xFE_FE_FE_FE_FE_FE_FE_00, 9); // upper left
+        get_reverse_l!(0x7F_7F_7F_7F_7F_7F_7F_00, 7); // upper right
+        get_reverse_r!(0x7F_7F_7F_7F_7F_7F_7F_7F, 1); // right
+        get_reverse_r!(0x00_FF_FF_FF_FF_FF_FF_FF, 8); // down
+        get_reverse_r!(0x00_7F_7F_7F_7F_7F_7F_7F, 9); // lower right
+        get_reverse_r!(0x00_FE_FE_FE_FE_FE_FE_FE, 7); // lower left
         self.player_board ^= reversed | pos;
         self.opponent_board ^= reversed;
     }
