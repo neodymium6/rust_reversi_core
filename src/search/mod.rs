@@ -1,5 +1,6 @@
 mod alpha_beta;
 mod evaluator;
+mod nega_scout;
 mod time_keeper;
 pub use alpha_beta::AlphaBetaSearch;
 pub use evaluator::BitMatrixEvaluator;
