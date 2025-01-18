@@ -37,7 +37,7 @@ impl NegaScoutSearch {
             return None;
         }
         let mut child_boards = board.get_child_boards().unwrap();
-        child_boards.sort_by_key(|b| -self.score_board(b));
+        child_boards.sort_by_key(|b| self.score_board(b));
         Some(child_boards)
     }
 
@@ -49,7 +49,7 @@ impl NegaScoutSearch {
         legal_moves.sort_by_key(|&m| {
             let mut new_board = board.clone();
             new_board.do_move(m).unwrap();
-            -self.score_board(&new_board)
+            self.score_board(&new_board)
         });
         Some(legal_moves)
     }
