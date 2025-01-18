@@ -12,7 +12,6 @@ mod tests {
     use rust_reversi_core::search::AlphaBetaSearch;
     use rust_reversi_core::search::BitMatrixEvaluator;
     use rust_reversi_core::search::MatrixEvaluator;
-    use rust_reversi_core::search::NegaScoutSearch;
     use rust_reversi_core::search::PieceEvaluator;
 
     #[test]
@@ -156,53 +155,6 @@ mod tests {
                 }
                 let m1 = matrix_search.get_move(&board).unwrap();
                 let m2 = bitmatrix_search.get_move(&board).unwrap();
-                assert_eq!(m1, m2);
-                let m = board.get_random_move().unwrap();
-                board.do_move(m).unwrap();
-            }
-        }
-    }
-
-    #[test]
-    fn iter_deepening_nega_scout() {
-        let evaluator = PieceEvaluator::new();
-        let depth = 3;
-        let search = NegaScoutSearch::new(depth, Box::new(evaluator));
-        let mut board = Board::new();
-
-        let timeout = 0.01;
-        let timeout_duration = std::time::Duration::from_secs_f64(timeout);
-
-        while !board.is_game_over() {
-            if board.is_pass() {
-                board.do_pass().unwrap();
-                continue;
-            }
-            let start = std::time::Instant::now();
-            let m = search
-                .get_move_with_iter_deepening(&board, timeout_duration)
-                .unwrap();
-            let elapsed = start.elapsed().as_secs_f64();
-            assert!(elapsed < timeout);
-            board.do_move(m).unwrap();
-        }
-    }
-
-    #[test]
-    fn nega_scout_same_as_alpha_beta() {
-        let depth = 3;
-        let evaluator = PieceEvaluator::new();
-        let alpha_beta_search = AlphaBetaSearch::new(depth, Box::new(evaluator.clone()));
-        let nega_scout_search = NegaScoutSearch::new(depth, Box::new(evaluator));
-        for _ in 0..1000 {
-            let mut board = Board::new();
-            while !board.is_game_over() {
-                if board.is_pass() {
-                    board.do_pass().unwrap();
-                    continue;
-                }
-                let m1 = alpha_beta_search.get_move(&board).unwrap();
-                let m2 = nega_scout_search.get_move(&board).unwrap();
                 assert_eq!(m1, m2);
                 let m = board.get_random_move().unwrap();
                 board.do_move(m).unwrap();

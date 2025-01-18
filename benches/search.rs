@@ -7,28 +7,11 @@ use rust_reversi_core::search::BitMatrixEvaluator;
 use rust_reversi_core::search::Evaluator;
 use rust_reversi_core::search::LegalNumEvaluator;
 use rust_reversi_core::search::MatrixEvaluator;
-use rust_reversi_core::search::NegaScoutSearch;
 use rust_reversi_core::search::PieceEvaluator;
 
 const EPSILON: f64 = 1e-2;
 
 fn play_with_search(search: &AlphaBetaSearch) {
-    let mut board = Board::new();
-    while !board.is_game_over() {
-        if board.is_pass() {
-            board.do_pass().unwrap();
-        } else {
-            let m = if rand::thread_rng().gen_bool(EPSILON) {
-                board.get_random_move().unwrap()
-            } else {
-                search.get_move(&board).unwrap()
-            };
-            board.do_move(m).unwrap();
-        }
-    }
-}
-
-fn play_with_search2(search: &NegaScoutSearch) {
     let mut board = Board::new();
     while !board.is_game_over() {
         if board.is_pass() {
@@ -155,24 +138,6 @@ fn get_alpha_beta4_bitmatrix10s() -> AlphaBetaSearch {
     AlphaBetaSearch::new(4, Box::new(evaluator))
 }
 
-fn get_negascout4_bitmatrix10s() -> NegaScoutSearch {
-    let masks: Vec<u64> = black_box(vec![
-        0x0000001818000000,
-        0x0000182424180000,
-        0x0000240000240000,
-        0x0018004242001800,
-        0x0024420000422400,
-        0x0042000000004200,
-        0x1800008181000018,
-        0x2400810000810024,
-        0x4281000000008142,
-        0x8100000000000081,
-    ]);
-    let weights: Vec<i32> = black_box(vec![0, 0, -1, -6, -8, -12, 0, 4, 1, 40]);
-    let evaluator = BitMatrixEvaluator::<10>::new(weights, masks);
-    NegaScoutSearch::new(4, Box::new(evaluator))
-}
-
 fn criterion_benchmark(c: &mut Criterion) {
     let alpha_beta4_piece = get_alpha_beta4_piece();
     let alpha_beta4_legal_num = get_alpha_beta4_legal_num();
@@ -211,36 +176,6 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("alpha_beta4_bitmatrix10s", |b| {
         b.iter(|| play_with_search(&alpha_beta4_bitmatrix10s))
     });
-    c.bench_function("negascout4_bitmatrix10s", |b| {
-        b.iter_custom(|iters| {
-            let searshs = (0..iters)
-                .map(|_| get_negascout4_bitmatrix10s())
-                .collect::<Vec<_>>();
-            let start = std::time::Instant::now();
-            for search in searshs {
-                play_with_search2(&search);
-            }
-            start.elapsed()
-        });
-    });
-
-    let mut group = c.benchmark_group("AlphaBeta vs NegaScout");
-    group.bench_function("alpha_beta4_bitmatrix10s", |b| {
-        b.iter(|| play_with_search(&alpha_beta4_bitmatrix10s))
-    });
-    group.bench_function("negascout4_bitmatrix10s", |b| {
-        b.iter_custom(|iters| {
-            let searshs = (0..iters)
-                .map(|_| get_negascout4_bitmatrix10s())
-                .collect::<Vec<_>>();
-            let start = std::time::Instant::now();
-            for search in searshs {
-                play_with_search2(&search);
-            }
-            start.elapsed()
-        });
-    });
-    group.finish();
 }
 
 criterion_group!(benches, criterion_benchmark);
