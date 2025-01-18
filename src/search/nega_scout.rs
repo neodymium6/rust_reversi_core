@@ -66,19 +66,43 @@ impl NegaScoutSearch {
             return self.evaluator.evaluate(board);
         }
 
-        let mut current_alpha = alpha;
         if let Some(child_boards) = self.get_child_boards_ordered(board) {
-            for child_board in child_boards {
-                let score = -self.get_search_score(&child_board, depth - 1, -beta, -current_alpha);
-                if score > current_alpha {
-                    current_alpha = score;
+            let mut current_alpha = alpha;
+            // first child
+            let score = -self.get_search_score(&child_boards[0], depth - 1, -beta, -current_alpha);
+            let mut max = score;
+            if beta <= score {
+                return score;
+            }
+            if current_alpha < score {
+                current_alpha = score;
+            }
+
+            for child_board in child_boards.iter().skip(1) {
+                let mut score = -self.get_search_score(
+                    child_board,
+                    depth - 1,
+                    -current_alpha - 1,
+                    -current_alpha,
+                );
+                if beta <= score {
+                    return score;
                 }
-                if current_alpha >= beta {
-                    // cut
-                    return current_alpha;
+                if current_alpha < score {
+                    current_alpha = score;
+                    score = -self.get_search_score(child_board, depth - 1, -beta, -current_alpha);
+                    if beta <= score {
+                        return score;
+                    }
+                    if current_alpha < score {
+                        current_alpha = score;
+                    }
+                }
+                if score > max {
+                    max = score;
                 }
             }
-            current_alpha
+            max
         } else {
             // pass
             let mut new_board = board.clone();
@@ -97,7 +121,8 @@ impl NegaScoutSearch {
         let mut best_move = None;
         let mut alpha = i32::MIN + 1;
         let beta = i32::MAX - 1;
-        for move_i in self.get_legal_moves_vec_ordered(board).unwrap() {
+        // for move_i in self.get_legal_moves_vec_ordered(board).unwrap() {
+        for move_i in board.get_legal_moves_vec() {
             let mut new_board = board.clone();
             new_board.do_move(move_i).unwrap();
             let score = -self.get_search_score(&new_board, self.max_depth, -beta, -alpha);
