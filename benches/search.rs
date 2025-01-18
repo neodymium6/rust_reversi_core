@@ -183,7 +183,6 @@ fn criterion_benchmark(c: &mut Criterion) {
     let alpha_beta4_bitmatrix10 = get_alpha_beta4_bitmatrix10();
     let alpha_beta4_matrixs = get_alpha_beta4_matrixs();
     let alpha_beta4_bitmatrix10s = get_alpha_beta4_bitmatrix10s();
-    let negascout4_bitmatrix10s = get_negascout4_bitmatrix10s();
 
     c.bench_function("alpha_beta4_piece", |b| {
         b.iter(|| play_with_search(&alpha_beta4_piece))
@@ -213,7 +212,16 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| play_with_search(&alpha_beta4_bitmatrix10s))
     });
     c.bench_function("negascout4_bitmatrix10s", |b| {
-        b.iter(|| play_with_search2(&negascout4_bitmatrix10s))
+        b.iter_custom(|iters| {
+            let searshs = (0..iters)
+                .map(|_| get_negascout4_bitmatrix10s())
+                .collect::<Vec<_>>();
+            let start = std::time::Instant::now();
+            for search in searshs {
+                play_with_search2(&search);
+            }
+            start.elapsed()
+        });
     });
 
     let mut group = c.benchmark_group("AlphaBeta vs NegaScout");
@@ -221,7 +229,16 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| play_with_search(&alpha_beta4_bitmatrix10s))
     });
     group.bench_function("negascout4_bitmatrix10s", |b| {
-        b.iter(|| play_with_search2(&negascout4_bitmatrix10s))
+        b.iter_custom(|iters| {
+            let searshs = (0..iters)
+                .map(|_| get_negascout4_bitmatrix10s())
+                .collect::<Vec<_>>();
+            let start = std::time::Instant::now();
+            for search in searshs {
+                play_with_search2(&search);
+            }
+            start.elapsed()
+        });
     });
     group.finish();
 }
