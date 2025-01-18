@@ -167,7 +167,7 @@ mod tests {
     fn iter_deepening_nega_scout() {
         let evaluator = PieceEvaluator::new();
         let depth = 3;
-        let search = AlphaBetaSearch::new(depth, Box::new(evaluator));
+        let search = NegaScoutSearch::new(depth, Box::new(evaluator));
         let mut board = Board::new();
 
         let timeout = 0.01;
