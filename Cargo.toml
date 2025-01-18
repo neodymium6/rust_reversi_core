@@ -1,6 +1,6 @@
 [package]
 name = "rust_reversi_core"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 authors = ["neodymium6"]
 license = "MIT"
