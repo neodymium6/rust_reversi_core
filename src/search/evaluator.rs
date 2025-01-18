@@ -1,11 +1,13 @@
+use std::fmt::{Debug, Display};
+
 use crate::board::{Board, Color};
 
-pub trait Evaluator: Send + Sync {
+pub trait Evaluator: Send + Sync + Debug {
     fn evaluate(&self, board: &Board) -> i32;
 }
 
 /// Score is the difference between the number of pieces.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct PieceEvaluator {}
 
 impl PieceEvaluator {
@@ -21,7 +23,7 @@ impl Evaluator for PieceEvaluator {
 }
 
 /// Score is the number of legal moves.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct LegalNumEvaluator {}
 impl LegalNumEvaluator {
     pub fn new() -> Self {
@@ -36,7 +38,7 @@ impl Evaluator for LegalNumEvaluator {
 }
 
 /// Score is calculated by the following matrix:
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MatrixEvaluator {
     matrix: [[i32; 8]; 8],
 }
@@ -86,7 +88,7 @@ impl Evaluator for MatrixEvaluator {
 }
 
 /// Score is calculated by the following bit patterns and weights:
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BitMatrixEvaluator<const N: usize> {
     weights: [i32; N],
     masks: [u64; N],
@@ -170,5 +172,18 @@ impl<const N: usize> Evaluator for BitMatrixEvaluator<N> {
             }
         }
         score
+    }
+}
+
+impl<const N: usize> Display for BitMatrixEvaluator<N> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "BitMatrixEvaluator [")?;
+        for (i, weight) in self.weights.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", weight)?;
+        }
+        write!(f, "]")
     }
 }

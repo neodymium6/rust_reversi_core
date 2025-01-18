@@ -50,6 +50,7 @@ fn get_alpha_beta4_matrix() -> AlphaBetaSearch {
     AlphaBetaSearch::new(4, Box::new(evaluator))
 }
 
+#[derive(Debug)]
 struct CustomEvaluator {}
 impl Evaluator for CustomEvaluator {
     fn evaluate(&self, board: &Board) -> i32 {
