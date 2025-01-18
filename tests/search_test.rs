@@ -129,7 +129,8 @@ mod tests {
             [100, -20, 10, 5, 5, 10, -20, 100],
         ];
         let matrix_evaluator = MatrixEvaluator::new(matrix);
-        let matrix_search = AlphaBetaSearch::new(0, Box::new(matrix_evaluator));
+        let depth = 0;
+        let matrix_search = AlphaBetaSearch::new(depth, Box::new(matrix_evaluator));
         let masks: Vec<u64> = vec![
             0x0000001818000000,
             0x0000182424180000,
@@ -144,7 +145,7 @@ mod tests {
         ];
         let weights: Vec<i32> = vec![-1, -1, -1, -2, -2, -50, 5, 10, -20, 100];
         let bitmatrix_evaluator = BitMatrixEvaluator::<10>::new(weights, masks);
-        let bitmatrix_search = AlphaBetaSearch::new(0, Box::new(bitmatrix_evaluator));
+        let bitmatrix_search = AlphaBetaSearch::new(depth, Box::new(bitmatrix_evaluator));
         for _ in 0..1000 {
             let mut board = Board::new();
             while !board.is_game_over() {
