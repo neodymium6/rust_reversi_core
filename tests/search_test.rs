@@ -12,6 +12,7 @@ mod tests {
     use rust_reversi_core::search::AlphaBetaSearch;
     use rust_reversi_core::search::BitMatrixEvaluator;
     use rust_reversi_core::search::MatrixEvaluator;
+    use rust_reversi_core::search::NegaScoutSearch;
     use rust_reversi_core::search::PieceEvaluator;
 
     #[test]
@@ -166,7 +167,7 @@ mod tests {
         let depth = 0;
         let evaluator = PieceEvaluator::new();
         let alpha_beta_search = AlphaBetaSearch::new(depth, Box::new(evaluator.clone()));
-        let nega_scout_search = AlphaBetaSearch::new(depth, Box::new(evaluator));
+        let nega_scout_search = NegaScoutSearch::new(depth, Box::new(evaluator));
         for _ in 0..1000 {
             let mut board = Board::new();
             while !board.is_game_over() {
