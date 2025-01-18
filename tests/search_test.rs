@@ -160,4 +160,26 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn nega_scout_same_as_alpha_beta() {
+        let depth = 0;
+        let evaluator = PieceEvaluator::new();
+        let alpha_beta_search = AlphaBetaSearch::new(depth, Box::new(evaluator.clone()));
+        let nega_scout_search = AlphaBetaSearch::new(depth, Box::new(evaluator));
+        for _ in 0..1000 {
+            let mut board = Board::new();
+            while !board.is_game_over() {
+                if board.is_pass() {
+                    board.do_pass().unwrap();
+                    continue;
+                }
+                let m1 = alpha_beta_search.get_move(&board).unwrap();
+                let m2 = nega_scout_search.get_move(&board).unwrap();
+                assert_eq!(m1, m2);
+                let m = board.get_random_move().unwrap();
+                board.do_move(m).unwrap();
+            }
+        }
+    }
 }
