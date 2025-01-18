@@ -7,6 +7,7 @@ use rust_reversi_core::search::BitMatrixEvaluator;
 use rust_reversi_core::search::Evaluator;
 use rust_reversi_core::search::LegalNumEvaluator;
 use rust_reversi_core::search::MatrixEvaluator;
+use rust_reversi_core::search::NegaScoutSearch;
 use rust_reversi_core::search::PieceEvaluator;
 
 const EPSILON: f64 = 1e-2;
@@ -27,8 +28,28 @@ fn play_with_search(search: &AlphaBetaSearch) {
     }
 }
 
+fn play_with_search2(search: &NegaScoutSearch) {
+    let mut board = Board::new();
+    while !board.is_game_over() {
+        if board.is_pass() {
+            board.do_pass().unwrap();
+        } else {
+            let m = if rand::thread_rng().gen_bool(EPSILON) {
+                board.get_random_move().unwrap()
+            } else {
+                search.get_move(&board).unwrap()
+            };
+            board.do_move(m).unwrap();
+        }
+    }
+}
+
 fn get_alpha_beta4_piece() -> AlphaBetaSearch {
     AlphaBetaSearch::new(4, Box::new(PieceEvaluator::new()))
+}
+
+fn get_negascout4_piece() -> NegaScoutSearch {
+    NegaScoutSearch::new(4, Box::new(PieceEvaluator::new()))
 }
 
 fn get_alpha_beta4_legal_num() -> AlphaBetaSearch {
@@ -107,6 +128,7 @@ fn get_alpha_beta4_bitmatrix10() -> AlphaBetaSearch {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let alpha_beta4_piece = get_alpha_beta4_piece();
+    let negascout4_piece = get_negascout4_piece();
     let alpha_beta4_legal_num = get_alpha_beta4_legal_num();
     let alpha_beta4_matrix = get_alpha_beta4_matrix();
     let alpha_beta4_custom = get_alpha_beta4_custom();
@@ -116,6 +138,9 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("alpha_beta4_piece", |b| {
         b.iter(|| play_with_search(&alpha_beta4_piece))
+    });
+    c.bench_function("negascout4_piece", |b| {
+        b.iter(|| play_with_search2(&negascout4_piece))
     });
     c.bench_function("alpha_beta4_legal_num", |b| {
         b.iter(|| play_with_search(&alpha_beta4_legal_num))
@@ -135,6 +160,15 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("alpha_beta4_bitmatrix10", |b| {
         b.iter(|| play_with_search(&alpha_beta4_bitmatrix10))
     });
+
+    let mut group = c.benchmark_group("AlphaBeta vs NegaScout");
+    group.bench_function("alpha_beta4_piece", |b| {
+        b.iter(|| play_with_search(&alpha_beta4_piece))
+    });
+    group.bench_function("negascout4_piece", |b| {
+        b.iter(|| play_with_search2(&negascout4_piece))
+    });
+    group.finish();
 }
 
 criterion_group!(benches, criterion_benchmark);
