@@ -348,11 +348,13 @@ impl Board {
         Ok(board_matrix)
     }
 
+    #[inline]
     /// Get the number of player's stones
     pub fn player_piece_num(&self) -> i32 {
         self.player_board.count_ones() as i32
     }
 
+    #[inline]
     /// Get the number of opponent's stones
     pub fn opponent_piece_num(&self) -> i32 {
         self.opponent_board.count_ones() as i32
