@@ -131,75 +131,6 @@ const BITS: [u64; 64] = [
     1 << 0,
 ];
 
-const X_TO_BIT: [u64; 66] = [
-    0x0000000000000001,
-    0x0000000000000002,
-    0x0000000000000004,
-    0x0000000000000008,
-    0x0000000000000010,
-    0x0000000000000020,
-    0x0000000000000040,
-    0x0000000000000080,
-    0x0000000000000100,
-    0x0000000000000200,
-    0x0000000000000400,
-    0x0000000000000800,
-    0x0000000000001000,
-    0x0000000000002000,
-    0x0000000000004000,
-    0x0000000000008000,
-    0x0000000000010000,
-    0x0000000000020000,
-    0x0000000000040000,
-    0x0000000000080000,
-    0x0000000000100000,
-    0x0000000000200000,
-    0x0000000000400000,
-    0x0000000000800000,
-    0x0000000001000000,
-    0x0000000002000000,
-    0x0000000004000000,
-    0x0000000008000000,
-    0x0000000010000000,
-    0x0000000020000000,
-    0x0000000040000000,
-    0x0000000080000000,
-    0x0000000100000000,
-    0x0000000200000000,
-    0x0000000400000000,
-    0x0000000800000000,
-    0x0000001000000000,
-    0x0000002000000000,
-    0x0000004000000000,
-    0x0000008000000000,
-    0x0000010000000000,
-    0x0000020000000000,
-    0x0000040000000000,
-    0x0000080000000000,
-    0x0000100000000000,
-    0x0000200000000000,
-    0x0000400000000000,
-    0x0000800000000000,
-    0x0001000000000000,
-    0x0002000000000000,
-    0x0004000000000000,
-    0x0008000000000000,
-    0x0010000000000000,
-    0x0020000000000000,
-    0x0040000000000000,
-    0x0080000000000000,
-    0x0100000000000000,
-    0x0200000000000000,
-    0x0400000000000000,
-    0x0800000000000000,
-    0x1000000000000000,
-    0x2000000000000000,
-    0x4000000000000000,
-    0x8000000000000000,
-    0,
-    0, // <- hack for passing move & nomove
-];
-
 impl Default for Board {
     fn default() -> Self {
         Board {
@@ -531,38 +462,46 @@ impl Board {
     /// Reverse the stones
     /// # Arguments
     /// * `pos` - Position to place the stone
-    pub fn reverse(&mut self, pos: usize) {
-        let pos = 63 - pos;
+    pub fn reverse(&mut self, pos: u64) {
         let mut reversed: u64 = 0;
-        const EDGE: [u64; 8] = [
-            0x01010101010101ff,
-            0x00000000000000ff,
-            0x80808080808080ff,
-            0x0101010101010101,
-            0x8080808080808080,
-            0xff01010101010101,
-            0xff00000000000000,
-            0xff80808080808080,
+        const MASKS_L: [u64; 4] = [
+            0xFE_FE_FE_FE_FE_FE_FE_FE, // left
+            0xFF_FF_FF_FF_FF_FF_FF_00, // up
+            0xFE_FE_FE_FE_FE_FE_FE_00, // upper left
+            0x7F_7F_7F_7F_7F_7F_7F_00, // upper right
         ];
-        const DIR: [i32; 8] = [-9, -8, -7, -1, 1, 7, 8, 9];
-
-        for d in 0..8 {
-            if X_TO_BIT[pos] & EDGE[d] == 0 {
-                let mut f = 0;
-                let mut x = pos as i32 + DIR[d];
-                while (self.opponent_board & X_TO_BIT[x as usize]) != 0
-                    && (X_TO_BIT[x as usize] & EDGE[d] == 0)
-                {
-                    f |= X_TO_BIT[x as usize];
-                    x += DIR[d];
-                }
-                if (self.player_board & X_TO_BIT[x as usize]) != 0 {
-                    reversed |= f;
-                }
+        const MASKS_R: [u64; 4] = [
+            0x7F_7F_7F_7F_7F_7F_7F_7F, // right
+            0x00_FF_FF_FF_FF_FF_FF_FF, // down
+            0x00_7F_7F_7F_7F_7F_7F_7F, // lower right
+            0x00_FE_FE_FE_FE_FE_FE_FE, // lower left
+        ];
+        const DIR: [usize; 4] = [1, 8, 9, 7];
+        // tmp is position of stones to reverse if piece exists on the end of stones to reverse
+        // mask is position that exists opponent's stone to reverse from piece on each direction
+        for i in 0..4 {
+            let mut mask = MASKS_L[i] & (pos << DIR[i]);
+            let mut tmp = 0;
+            while mask & self.opponent_board != 0 {
+                tmp |= mask;
+                mask = MASKS_L[i] & (mask << DIR[i]);
+            }
+            if (mask & self.player_board) != 0 {
+                reversed |= tmp;
             }
         }
-
-        self.player_board ^= reversed | X_TO_BIT[pos];
+        for i in 0..4 {
+            let mut mask = MASKS_R[i] & (pos >> DIR[i]);
+            let mut tmp = 0;
+            while mask & self.opponent_board != 0 {
+                tmp |= mask;
+                mask = MASKS_R[i] & (mask >> DIR[i]);
+            }
+            if (mask & self.player_board) != 0 {
+                reversed |= tmp;
+            }
+        }
+        self.player_board ^= reversed | pos;
         self.opponent_board ^= reversed;
     }
 
@@ -578,8 +517,9 @@ impl Board {
         if pos >= BOARD_SIZE * BOARD_SIZE {
             return Err(BoardError::InvalidPosition);
         }
+        let pos_bit = Board::pos2bit(pos);
         if self.is_legal_move(pos) {
-            self.reverse(pos);
+            self.reverse(pos_bit);
             swap(&mut self.player_board, &mut self.opponent_board);
             self.turn = self.turn.opposite();
         } else {
