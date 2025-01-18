@@ -418,7 +418,7 @@ impl Board {
     /// Get the legal moves for the player as a vector of positions
     pub fn get_legal_moves_vec(&self) -> Vec<usize> {
         let legal_moves = self.get_legal_moves();
-        let mut legal_moves_vec = Vec::new();
+        let mut legal_moves_vec = Vec::with_capacity(legal_moves.count_ones() as usize);
         for (i, &bit) in BITS.iter().enumerate() {
             if legal_moves & bit != 0 {
                 legal_moves_vec.push(i);
@@ -431,7 +431,7 @@ impl Board {
     /// * true: legal move, false: illegal move
     pub fn get_legal_moves_tf(&self) -> Vec<bool> {
         let legal_moves = self.get_legal_moves();
-        let mut legal_moves_tf = Vec::new();
+        let mut legal_moves_tf = Vec::with_capacity(BOARD_SIZE * BOARD_SIZE);
         for &bit in BITS.iter() {
             legal_moves_tf.push(legal_moves & bit != 0);
         }
@@ -448,8 +448,8 @@ impl Board {
         if self.is_pass() {
             return None;
         }
-        let mut child_boards = Vec::new();
         let legal_moves = self.get_legal_moves();
+        let mut child_boards = Vec::with_capacity(legal_moves.count_ones() as usize);
         for (i, &bit) in BITS.iter().enumerate() {
             if legal_moves & bit != 0 {
                 let mut child_board = self.clone();
