@@ -63,6 +63,7 @@ pub struct Board {
     player_board: u64,
     opponent_board: u64,
     turn: Turn,
+    legal_moves_cache: Option<u64>,
 }
 
 const BITS: [u64; 64] = [
@@ -138,6 +139,7 @@ impl Default for Board {
             player_board: 0x00_00_00_08_10_00_00_00,
             opponent_board: 0x00_00_00_10_08_00_00_00,
             turn: Turn::Black,
+            legal_moves_cache: None,
         }
     }
 }
@@ -204,6 +206,7 @@ impl Board {
         self.player_board = player_board;
         self.opponent_board = opponent_board;
         self.turn = turn;
+        self.legal_moves_cache = None;
     }
 
     /// Set the current board state from a string
@@ -248,6 +251,7 @@ impl Board {
             Turn::Black => self.set_board(black_board, white_board, Turn::Black),
             Turn::White => self.set_board(white_board, black_board, Turn::White),
         }
+        self.legal_moves_cache = None;
         Ok(())
     }
 
@@ -406,17 +410,22 @@ impl Board {
     }
 
     /// Get the legal moves for the player as a bitboard
-    pub fn get_legal_moves(&self) -> u64 {
+    pub fn get_legal_moves(&mut self) -> u64 {
+        if let Some(legal_moves) = self.legal_moves_cache {
+            return legal_moves;
+        }
         let mask = 0x7E_7E_7E_7E_7E_7E_7E_7E & self.opponent_board;
-        (Board::get_legal_partial(mask, self.player_board, 1)
+        let legal_moves = (Board::get_legal_partial(mask, self.player_board, 1)
             | Board::get_legal_partial(self.opponent_board, self.player_board, 8)
             | Board::get_legal_partial(mask, self.player_board, 9)
             | Board::get_legal_partial(mask, self.player_board, 7))
-            & !(self.player_board | self.opponent_board)
+            & !(self.player_board | self.opponent_board);
+        self.legal_moves_cache = Some(legal_moves);
+        legal_moves
     }
 
     /// Get the legal moves for the player as a vector of positions
-    pub fn get_legal_moves_vec(&self) -> Vec<usize> {
+    pub fn get_legal_moves_vec(&mut self) -> Vec<usize> {
         let legal_moves = self.get_legal_moves();
         let mut legal_moves_vec = Vec::with_capacity(legal_moves.count_ones() as usize);
         for (i, &bit) in BITS.iter().enumerate() {
@@ -429,7 +438,7 @@ impl Board {
 
     /// Get the legal moves for the player as a vector of boolean
     /// * true: legal move, false: illegal move
-    pub fn get_legal_moves_tf(&self) -> Vec<bool> {
+    pub fn get_legal_moves_tf(&mut self) -> Vec<bool> {
         let legal_moves = self.get_legal_moves();
         let mut legal_moves_tf = Vec::with_capacity(BOARD_SIZE * BOARD_SIZE);
         for &bit in BITS.iter() {
@@ -439,12 +448,12 @@ impl Board {
     }
 
     /// Get if the move is legal
-    pub fn is_legal_move(&self, pos: usize) -> bool {
+    pub fn is_legal_move(&mut self, pos: usize) -> bool {
         self.get_legal_moves() & BITS[pos] != 0
     }
 
     /// Get the list of board states after legal moves
-    pub fn get_child_boards(&self) -> Option<Vec<Board>> {
+    pub fn get_child_boards(&mut self) -> Option<Vec<Board>> {
         if self.is_pass() {
             return None;
         }
@@ -522,6 +531,7 @@ impl Board {
             self.reverse(pos_bit);
             swap(&mut self.player_board, &mut self.opponent_board);
             self.turn = self.turn.opposite();
+            self.legal_moves_cache = None;
         } else {
             return Err(BoardError::InvalidMove);
         }
@@ -540,6 +550,7 @@ impl Board {
         }
         swap(&mut self.player_board, &mut self.opponent_board);
         self.turn = self.turn.opposite();
+        self.legal_moves_cache = None;
         Ok(())
     }
 
@@ -551,6 +562,9 @@ impl Board {
     /// * If there is a legal move, return false
     /// * If the game is over, return false
     pub fn is_pass(&self) -> bool {
+        if let Some(legal_moves) = self.legal_moves_cache {
+            return legal_moves == 0;
+        }
         let mask_v = 0x7E_7E_7E_7E_7E_7E_7E_7E & self.opponent_board;
         let mask_h = 0x00_FF_FF_FF_FF_FF_FF_00 & self.opponent_board;
         let mask_a = 0x00_7E_7E_7E_7E_7E_7E_00 & self.opponent_board;
@@ -579,6 +593,7 @@ impl Board {
                 player_board: self.opponent_board,
                 opponent_board: self.player_board,
                 turn: self.turn.opposite(),
+                legal_moves_cache: None,
             };
             if opponent_board.is_pass() {
                 return true;
@@ -668,7 +683,7 @@ impl Board {
     /// * `Result<usize, BoardError>`
     /// # Note
     /// * If there is no legal move, return Err(BoardError::NoLegalMove)
-    pub fn get_random_move(&self) -> Result<usize, BoardError> {
+    pub fn get_random_move(&mut self) -> Result<usize, BoardError> {
         let legal_moves_vec = self.get_legal_moves_vec();
         if legal_moves_vec.is_empty() {
             return Err(BoardError::NoLegalMove);

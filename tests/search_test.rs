@@ -108,7 +108,7 @@ mod tests {
             }
             let start = std::time::Instant::now();
             let m = search
-                .get_move_with_iter_deepening(&board, timeout_duration)
+                .get_move_with_iter_deepening(&mut board, timeout_duration)
                 .unwrap();
             let elapsed = start.elapsed().as_secs_f64();
             assert!(elapsed < timeout);
@@ -153,8 +153,8 @@ mod tests {
                     board.do_pass().unwrap();
                     continue;
                 }
-                let m1 = matrix_search.get_move(&board).unwrap();
-                let m2 = bitmatrix_search.get_move(&board).unwrap();
+                let m1 = matrix_search.get_move(&mut board).unwrap();
+                let m2 = bitmatrix_search.get_move(&mut board).unwrap();
                 assert_eq!(m1, m2);
                 let m = board.get_random_move().unwrap();
                 board.do_move(m).unwrap();

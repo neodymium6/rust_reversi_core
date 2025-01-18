@@ -20,7 +20,7 @@ fn play_with_search(search: &AlphaBetaSearch) {
             let m = if rand::thread_rng().gen_bool(EPSILON) {
                 board.get_random_move().unwrap()
             } else {
-                search.get_move(&board).unwrap()
+                search.get_move(&mut board).unwrap()
             };
             board.do_move(m).unwrap();
         }
@@ -53,7 +53,7 @@ fn get_alpha_beta4_matrix() -> AlphaBetaSearch {
 #[derive(Debug)]
 struct CustomEvaluator {}
 impl Evaluator for CustomEvaluator {
-    fn evaluate(&self, board: &Board) -> i32 {
+    fn evaluate(&self, board: &mut Board) -> i32 {
         board.diff_piece_num() + board.get_legal_moves().count_ones() as i32
     }
 }

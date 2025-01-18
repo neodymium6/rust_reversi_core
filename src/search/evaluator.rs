@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display};
 use crate::board::{Board, Color};
 
 pub trait Evaluator: Send + Sync + Debug {
-    fn evaluate(&self, board: &Board) -> i32;
+    fn evaluate(&self, board: &mut Board) -> i32;
 }
 
 /// Score is the difference between the number of pieces.
@@ -17,7 +17,7 @@ impl PieceEvaluator {
 }
 
 impl Evaluator for PieceEvaluator {
-    fn evaluate(&self, board: &Board) -> i32 {
+    fn evaluate(&self, board: &mut Board) -> i32 {
         board.diff_piece_num()
     }
 }
@@ -32,7 +32,7 @@ impl LegalNumEvaluator {
 }
 
 impl Evaluator for LegalNumEvaluator {
-    fn evaluate(&self, board: &Board) -> i32 {
+    fn evaluate(&self, board: &mut Board) -> i32 {
         board.get_legal_moves_vec().len() as i32
     }
 }
@@ -73,7 +73,7 @@ impl MatrixEvaluator {
 }
 
 impl Evaluator for MatrixEvaluator {
-    fn evaluate(&self, board: &Board) -> i32 {
+    fn evaluate(&self, board: &mut Board) -> i32 {
         let mut score = 0;
         let board_vec = board.get_board_vec_black().unwrap();
         for (i, color) in board_vec.iter().enumerate() {
@@ -154,7 +154,7 @@ impl<const N: usize> BitMatrixEvaluator<N> {
 }
 
 impl<const N: usize> Evaluator for BitMatrixEvaluator<N> {
-    fn evaluate(&self, board: &Board) -> i32 {
+    fn evaluate(&self, board: &mut Board) -> i32 {
         let mut score = 0;
         let (player_board, opponent_board, _turn) = board.get_board();
         for i in 0..self.positive_start {

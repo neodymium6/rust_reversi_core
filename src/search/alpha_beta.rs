@@ -21,7 +21,7 @@ impl AlphaBetaSearch {
         }
     }
 
-    fn score_board(&self, board: &Board) -> i32 {
+    fn score_board(&self, board: &mut Board) -> i32 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
                 (Ok(true), _) => return i32::MAX - 2,
@@ -32,16 +32,19 @@ impl AlphaBetaSearch {
         self.evaluator.evaluate(board)
     }
 
-    fn get_child_boards_ordered(&self, board: &Board) -> Option<Vec<Board>> {
+    fn get_child_boards_ordered(&self, board: &mut Board) -> Option<Vec<Board>> {
         if board.is_pass() {
             return None;
         }
         let mut child_boards = board.get_child_boards().unwrap();
-        child_boards.sort_by_key(|b| self.score_board(b));
+        child_boards.sort_by_key(|b| {
+            let mut b_clone = b.clone();
+            self.score_board(&mut b_clone)
+        });
         Some(child_boards)
     }
 
-    fn get_legal_moves_vec_ordered(&self, board: &Board) -> Option<Vec<usize>> {
+    fn get_legal_moves_vec_ordered(&self, board: &mut Board) -> Option<Vec<usize>> {
         if board.is_pass() {
             return None;
         }
@@ -49,12 +52,12 @@ impl AlphaBetaSearch {
         legal_moves.sort_by_key(|&m| {
             let mut new_board = board.clone();
             new_board.do_move(m).unwrap();
-            self.score_board(&new_board)
+            self.score_board(&mut new_board)
         });
         Some(legal_moves)
     }
 
-    fn get_search_score(&self, board: &Board, depth: usize, alpha: i32, beta: i32) -> i32 {
+    fn get_search_score(&self, board: &mut Board, depth: usize, alpha: i32, beta: i32) -> i32 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
                 (Ok(true), _) => return i32::MAX - 2,
@@ -72,8 +75,9 @@ impl AlphaBetaSearch {
             _ => board.get_child_boards(),
         };
         if let Some(child_boards) = child_boards {
-            for child_board in child_boards {
-                let score = -self.get_search_score(&child_board, depth - 1, -beta, -current_alpha);
+            for mut child_board in child_boards {
+                let score =
+                    -self.get_search_score(&mut child_board, depth - 1, -beta, -current_alpha);
                 if score > current_alpha {
                     current_alpha = score;
                 }
@@ -87,7 +91,7 @@ impl AlphaBetaSearch {
             // pass
             let mut new_board = board.clone();
             new_board.do_pass().unwrap();
-            -self.get_search_score(&new_board, depth, -beta, -alpha)
+            -self.get_search_score(&mut new_board, depth, -beta, -alpha)
         }
     }
 
@@ -97,14 +101,14 @@ impl AlphaBetaSearch {
     /// # Returns
     /// * `Some(usize)` - The best move.
     /// * `None` - player must pass.
-    pub fn get_move(&self, board: &Board) -> Option<usize> {
+    pub fn get_move(&self, board: &mut Board) -> Option<usize> {
         let mut best_move = None;
         let mut alpha = i32::MIN + 1;
         let beta = i32::MAX - 1;
         for move_i in self.get_legal_moves_vec_ordered(board).unwrap() {
             let mut new_board = board.clone();
             new_board.do_move(move_i).unwrap();
-            let score = -self.get_search_score(&new_board, self.max_depth, -beta, -alpha);
+            let score = -self.get_search_score(&mut new_board, self.max_depth, -beta, -alpha);
             if score > alpha {
                 alpha = score;
                 best_move = Some(move_i);
@@ -115,7 +119,7 @@ impl AlphaBetaSearch {
 
     fn get_search_score_with_timeout(
         &self,
-        board: &Board,
+        board: &mut Board,
         depth: usize,
         alpha: i32,
         beta: i32,
@@ -138,9 +142,9 @@ impl AlphaBetaSearch {
             _ => board.get_child_boards(),
         };
         if let Some(child_boards) = child_boards {
-            for child_board in child_boards {
+            for mut child_board in child_boards {
                 let score = -self.get_search_score_with_timeout(
-                    &child_board,
+                    &mut child_board,
                     depth - 1,
                     -beta,
                     -current_alpha,
@@ -162,13 +166,13 @@ impl AlphaBetaSearch {
             // pass
             let mut new_board = board.clone();
             new_board.do_pass().unwrap();
-            -self.get_search_score_with_timeout(&new_board, depth, -beta, -alpha, time_keeper)
+            -self.get_search_score_with_timeout(&mut new_board, depth, -beta, -alpha, time_keeper)
         }
     }
 
     fn get_move_with_timeout(
         &self,
-        board: &Board,
+        board: &mut Board,
         depth: usize,
         time_keeper: &TimeKeeper,
     ) -> Option<usize> {
@@ -178,8 +182,13 @@ impl AlphaBetaSearch {
         for move_i in self.get_legal_moves_vec_ordered(board).unwrap() {
             let mut new_board = board.clone();
             new_board.do_move(move_i).unwrap();
-            let score =
-                -self.get_search_score_with_timeout(&new_board, depth, -beta, -alpha, time_keeper);
+            let score = -self.get_search_score_with_timeout(
+                &mut new_board,
+                depth,
+                -beta,
+                -alpha,
+                time_keeper,
+            );
             if score > alpha {
                 alpha = score;
                 best_move = Some(move_i);
@@ -205,7 +214,7 @@ impl AlphaBetaSearch {
     /// * Depth will be increased iteratively from 0.
     pub fn get_move_with_iter_deepening(
         &self,
-        board: &Board,
+        board: &mut Board,
         timeout: std::time::Duration,
     ) -> Option<usize> {
         let mut best_move = None;

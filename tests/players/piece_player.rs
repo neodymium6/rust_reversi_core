@@ -39,7 +39,7 @@ fn main() {
             } else {
                 let evaluator = PieceEvaluator::new();
                 let search = AlphaBetaSearch::new(depth, Box::new(evaluator));
-                let m = search.get_move(&board);
+                let m = search.get_move(&mut board);
                 if m.is_none() {
                     eprintln!("No legal moves");
                     eprintln!("{}", input);

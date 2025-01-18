@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn initial_legal_moves() {
-        let board = Board::new();
+        let mut board = Board::new();
         let legal_moves = board.get_legal_moves_vec();
         assert_eq!(legal_moves.len(), 4);
         assert!(legal_moves.contains(&19)); // (2,3)
