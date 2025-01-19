@@ -1,7 +1,7 @@
 use rand::Rng;
 use rust_reversi_core::board::{Board, Turn};
-use rust_reversi_core::search::AlphaBetaSearch;
 use rust_reversi_core::search::MatrixEvaluator;
+use rust_reversi_core::search::{AlphaBetaSearch, Search};
 use std::env;
 
 const EPSILON: f64 = 1e-2;

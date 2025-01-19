@@ -1,6 +1,7 @@
 use crate::board::Board;
 use crate::search::evaluator::Evaluator;
 use crate::search::time_keeper::TimeKeeper;
+use crate::search::Search;
 use crate::utils::StackVec64;
 
 pub struct AlphaBetaSearch {
@@ -96,28 +97,6 @@ impl AlphaBetaSearch {
         }
     }
 
-    /// Get the best move for the given board.
-    /// # Arguments
-    /// * `board` - The board to search the best move.
-    /// # Returns
-    /// * `Some(usize)` - The best move.
-    /// * `None` - player must pass.
-    pub fn get_move(&self, board: &mut Board) -> Option<usize> {
-        let mut best_move = None;
-        let mut alpha = i32::MIN + 1;
-        let beta = i32::MAX - 1;
-        for &move_i in &self.get_legal_moves_vec_ordered(board).unwrap() {
-            let mut new_board = board.clone();
-            new_board.do_move(move_i).unwrap();
-            let score = -self.get_search_score(&mut new_board, self.max_depth, -beta, -alpha);
-            if score > alpha {
-                alpha = score;
-                best_move = Some(move_i);
-            }
-        }
-        best_move
-    }
-
     fn get_search_score_with_timeout(
         &self,
         board: &mut Board,
@@ -200,8 +179,32 @@ impl AlphaBetaSearch {
         }
         best_move
     }
+}
 
-    const MARGIN_TIME: f64 = 0.003;
+const MARGIN_TIME: f64 = 0.003;
+impl Search for AlphaBetaSearch {
+    /// Get the best move for the given board.
+    /// # Arguments
+    /// * `board` - The board to search the best move.
+    /// # Returns
+    /// * `Some(usize)` - The best move.
+    /// * `None` - player must pass.
+    fn get_move(&self, board: &mut Board) -> Option<usize> {
+        let mut best_move = None;
+        let mut alpha = i32::MIN + 1;
+        let beta = i32::MAX - 1;
+        for &move_i in &self.get_legal_moves_vec_ordered(board).unwrap() {
+            let mut new_board = board.clone();
+            new_board.do_move(move_i).unwrap();
+            let score = -self.get_search_score(&mut new_board, self.max_depth, -beta, -alpha);
+            if score > alpha {
+                alpha = score;
+                best_move = Some(move_i);
+            }
+        }
+        best_move
+    }
+
     /// Get the best move for the given board with iterative deepening.
     /// # Arguments
     /// * `board` - The board to search the best move.
@@ -213,13 +216,13 @@ impl AlphaBetaSearch {
     /// * The search will stop if the timeout is reached.
     /// * The field `max_depth` will be ignored.
     /// * Depth will be increased iteratively from 0.
-    pub fn get_move_with_iter_deepening(
+    fn get_move_with_iter_deepening(
         &self,
         board: &mut Board,
         timeout: std::time::Duration,
     ) -> Option<usize> {
         let mut best_move = None;
-        let search_duration = timeout.as_secs_f64() - Self::MARGIN_TIME;
+        let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
         let time_keeper = TimeKeeper::new(std::time::Duration::from_secs_f64(search_duration));
         let mut depth = 0;
         loop {

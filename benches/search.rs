@@ -2,12 +2,12 @@ use criterion::black_box;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rand::Rng;
 use rust_reversi_core::board::Board;
-use rust_reversi_core::search::AlphaBetaSearch;
 use rust_reversi_core::search::BitMatrixEvaluator;
 use rust_reversi_core::search::Evaluator;
 use rust_reversi_core::search::LegalNumEvaluator;
 use rust_reversi_core::search::MatrixEvaluator;
 use rust_reversi_core::search::PieceEvaluator;
+use rust_reversi_core::search::{AlphaBetaSearch, Search};
 
 const EPSILON: f64 = 1e-2;
 

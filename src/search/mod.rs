@@ -7,3 +7,14 @@ pub use evaluator::Evaluator;
 pub use evaluator::LegalNumEvaluator;
 pub use evaluator::MatrixEvaluator;
 pub use evaluator::PieceEvaluator;
+
+use crate::board::Board;
+
+pub trait Search {
+    fn get_move(&self, board: &mut Board) -> Option<usize>;
+    fn get_move_with_iter_deepening(
+        &self,
+        board: &mut Board,
+        timeout: std::time::Duration,
+    ) -> Option<usize>;
+}

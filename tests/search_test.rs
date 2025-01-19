@@ -13,6 +13,7 @@ mod tests {
     use rust_reversi_core::search::BitMatrixEvaluator;
     use rust_reversi_core::search::MatrixEvaluator;
     use rust_reversi_core::search::PieceEvaluator;
+    use rust_reversi_core::search::Search;
 
     #[test]
     fn random_vs_piece() {
