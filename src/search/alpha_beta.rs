@@ -1,6 +1,7 @@
 use crate::board::Board;
 use crate::search::evaluator::Evaluator;
 use crate::search::time_keeper::TimeKeeper;
+use crate::utils::StackVec64;
 
 pub struct AlphaBetaSearch {
     max_depth: usize,
@@ -44,7 +45,7 @@ impl AlphaBetaSearch {
         Some(child_boards)
     }
 
-    fn get_legal_moves_vec_ordered(&self, board: &mut Board) -> Option<Vec<usize>> {
+    fn get_legal_moves_vec_ordered(&self, board: &mut Board) -> Option<StackVec64<usize>> {
         if board.is_pass() {
             return None;
         }
@@ -105,7 +106,7 @@ impl AlphaBetaSearch {
         let mut best_move = None;
         let mut alpha = i32::MIN + 1;
         let beta = i32::MAX - 1;
-        for move_i in self.get_legal_moves_vec_ordered(board).unwrap() {
+        for &move_i in &self.get_legal_moves_vec_ordered(board).unwrap() {
             let mut new_board = board.clone();
             new_board.do_move(move_i).unwrap();
             let score = -self.get_search_score(&mut new_board, self.max_depth, -beta, -alpha);
@@ -179,7 +180,7 @@ impl AlphaBetaSearch {
         let mut best_move = None;
         let mut alpha = i32::MIN + 1;
         let beta = i32::MAX - 1;
-        for move_i in self.get_legal_moves_vec_ordered(board).unwrap() {
+        for &move_i in &self.get_legal_moves_vec_ordered(board).unwrap() {
             let mut new_board = board.clone();
             new_board.do_move(move_i).unwrap();
             let score = -self.get_search_score_with_timeout(
