@@ -1,3 +1,4 @@
+use crate::utils::StackVec64;
 use core::fmt;
 use std::hash::Hash;
 use std::mem::swap;
@@ -368,9 +369,9 @@ impl Board {
     }
 
     /// Get the legal moves for the player as a vector of positions
-    pub fn get_legal_moves_vec(&mut self) -> Vec<usize> {
+    pub fn get_legal_moves_vec(&mut self) -> StackVec64<usize> {
         let legal_moves = self.get_legal_moves();
-        let mut legal_moves_vec = Vec::with_capacity(legal_moves.count_ones() as usize);
+        let mut legal_moves_vec = StackVec64::new();
         for (i, &bit) in BITS.iter().enumerate() {
             if legal_moves & bit != 0 {
                 legal_moves_vec.push(i);
