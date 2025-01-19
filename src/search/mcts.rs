@@ -159,7 +159,7 @@ impl MctsSearch {
     }
 }
 
-const MARGIN_TIME: f64 = 0.001;
+const MARGIN_TIME: f64 = 0.0011;
 impl Search for MctsSearch {
     /// Get the best move for the given board.
     /// # Arguments

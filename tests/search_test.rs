@@ -288,4 +288,27 @@ mod tests {
         }
         assert!(mcts_wins > random_wins);
     }
+
+    #[test]
+    fn mcts_timeout() {
+        let search = MctsSearch::new(1000, 1.0, 10);
+        let mut board = Board::new();
+
+        let timeout = 0.01;
+        let timeout_duration = std::time::Duration::from_secs_f64(timeout);
+
+        while !board.is_game_over() {
+            if board.is_pass() {
+                board.do_pass().unwrap();
+                continue;
+            }
+            let start = std::time::Instant::now();
+            let m = search
+                .get_move_with_timeout(&mut board, timeout_duration)
+                .unwrap();
+            let elapsed = start.elapsed().as_secs_f64();
+            assert!(elapsed < timeout);
+            board.do_move(m).unwrap();
+        }
+    }
 }
