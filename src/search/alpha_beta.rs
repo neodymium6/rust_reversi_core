@@ -160,7 +160,7 @@ impl AlphaBetaSearch {
         }
     }
 
-    fn get_move_with_timeout(
+    fn get_move_with_timeout_inner(
         &self,
         board: &mut Board,
         depth: usize,
@@ -225,7 +225,7 @@ impl Search for AlphaBetaSearch {
     /// # Note
     /// * The search will stop if the timeout is reached or max depth is reached.
     /// * Depth will be increased iteratively from 0.
-    fn get_move_with_iter_deepening(
+    fn get_move_with_timeout(
         &self,
         board: &mut Board,
         timeout: std::time::Duration,
@@ -234,7 +234,7 @@ impl Search for AlphaBetaSearch {
         let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
         let time_keeper = TimeKeeper::new(std::time::Duration::from_secs_f64(search_duration));
         for depth in 0..self.max_depth {
-            let move_i = self.get_move_with_timeout(board, depth, &time_keeper);
+            let move_i = self.get_move_with_timeout_inner(board, depth, &time_keeper);
             if time_keeper.is_timeout() {
                 break;
             }

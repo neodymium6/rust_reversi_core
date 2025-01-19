@@ -1,5 +1,6 @@
 mod alpha_beta;
 mod evaluator;
+mod mcts;
 mod time_keeper;
 pub use alpha_beta::AlphaBetaSearch;
 pub use evaluator::BitMatrixEvaluator;
@@ -12,7 +13,7 @@ use crate::board::Board;
 
 pub trait Search {
     fn get_move(&self, board: &mut Board) -> Option<usize>;
-    fn get_move_with_iter_deepening(
+    fn get_move_with_timeout(
         &self,
         board: &mut Board,
         timeout: std::time::Duration,

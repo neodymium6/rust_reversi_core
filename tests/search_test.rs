@@ -109,7 +109,7 @@ mod tests {
             }
             let start = std::time::Instant::now();
             let m = search
-                .get_move_with_iter_deepening(&mut board, timeout_duration)
+                .get_move_with_timeout(&mut board, timeout_duration)
                 .unwrap();
             let elapsed = start.elapsed().as_secs_f64();
             assert!(elapsed < timeout);
