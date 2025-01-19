@@ -11,7 +11,7 @@ use rust_reversi_core::search::{AlphaBetaSearch, Search};
 
 const EPSILON: f64 = 1e-2;
 
-fn play_with_search(search: &AlphaBetaSearch) {
+fn play_with_search(search: &dyn Search) {
     let mut board = Board::new();
     while !board.is_game_over() {
         if board.is_pass() {
@@ -176,6 +176,14 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
     c.bench_function("alpha_beta4_bitmatrix10s", |b| {
         b.iter(|| play_with_search(&alpha_beta4_bitmatrix10s))
+    });
+
+    let mcts_1000_1_10 = rust_reversi_core::search::MctsSearch::new(1000, 1.0, 10);
+
+    c.bench_function("mcts: 1000-1.0-10", |b| {
+        b.iter(|| {
+            play_with_search(&mcts_1000_1_10);
+        })
     });
 }
 
