@@ -23,6 +23,16 @@ impl AlphaBetaSearch {
         }
     }
 
+    /// Get the maximum depth of the search tree.
+    pub fn get_max_depth(&self) -> usize {
+        self.max_depth
+    }
+
+    /// Set the maximum depth of the search tree.
+    pub fn set_max_depth(&mut self, max_depth: usize) {
+        self.max_depth = max_depth;
+    }
+
     fn score_board(&self, board: &mut Board) -> i32 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
@@ -213,8 +223,7 @@ impl Search for AlphaBetaSearch {
     /// * `Some(usize)` - The best move.
     /// * `None` - player must pass.
     /// # Note
-    /// * The search will stop if the timeout is reached.
-    /// * The field `max_depth` will be ignored.
+    /// * The search will stop if the timeout is reached or max depth is reached.
     /// * Depth will be increased iteratively from 0.
     fn get_move_with_iter_deepening(
         &self,
@@ -224,8 +233,7 @@ impl Search for AlphaBetaSearch {
         let mut best_move = None;
         let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
         let time_keeper = TimeKeeper::new(std::time::Duration::from_secs_f64(search_duration));
-        let mut depth = 0;
-        loop {
+        for depth in 0..self.max_depth {
             let move_i = self.get_move_with_timeout(board, depth, &time_keeper);
             if time_keeper.is_timeout() {
                 break;
@@ -233,7 +241,6 @@ impl Search for AlphaBetaSearch {
             if let Some(m) = move_i {
                 best_move = Some(m);
             }
-            depth += 1;
         }
         best_move
     }

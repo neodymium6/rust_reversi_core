@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn iter_deepening() {
         let evaluator = PieceEvaluator::new();
-        let depth = 3;
+        let depth = 60;
         let search = AlphaBetaSearch::new(depth, Box::new(evaluator));
         let mut board = Board::new();
 
