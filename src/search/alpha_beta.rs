@@ -191,7 +191,7 @@ impl AlphaBetaSearch {
     }
 }
 
-const MARGIN_TIME: f64 = 0.003;
+const MARGIN_TIME: f64 = 0.005;
 impl Search for AlphaBetaSearch {
     /// Get the best move for the given board.
     /// # Arguments
