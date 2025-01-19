@@ -57,6 +57,11 @@ impl<T: Copy + Default> StackVec64<T> {
     {
         self.iter().any(|y| x == y)
     }
+
+    #[inline]
+    pub fn to_vec(&self) -> Vec<T> {
+        self.iter().copied().collect()
+    }
 }
 
 impl<T: Copy + Default> Default for StackVec64<T> {
