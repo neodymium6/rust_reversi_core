@@ -1,19 +1,105 @@
 mod players;
 
 const N_GAMES: usize = 100;
+const EPSILON: f64 = 0.1;
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
     use players::compile_player;
     use players::get_player_path;
+    use rand::Rng;
     use rust_reversi_core::arena::LocalArena;
     use rust_reversi_core::board::Board;
+    use rust_reversi_core::board::Turn;
     use rust_reversi_core::search::AlphaBetaSearch;
     use rust_reversi_core::search::BitMatrixEvaluator;
     use rust_reversi_core::search::MatrixEvaluator;
+    use rust_reversi_core::search::MctsSearch;
     use rust_reversi_core::search::PieceEvaluator;
     use rust_reversi_core::search::Search;
+
+    trait Player {
+        fn get_move(&self, board: &mut Board) -> Option<usize>;
+        fn get_move_with_timeout(&self, board: &mut Board, timeout: Duration) -> Option<usize>;
+    }
+
+    struct RandomPlayer {}
+    impl Player for RandomPlayer {
+        fn get_move(&self, board: &mut Board) -> Option<usize> {
+            Some(board.get_random_move().unwrap())
+        }
+
+        fn get_move_with_timeout(&self, board: &mut Board, _timeout: Duration) -> Option<usize> {
+            self.get_move(board)
+        }
+    }
+
+    struct SearchPlayer {
+        search: Box<dyn Search>,
+    }
+    impl Player for SearchPlayer {
+        fn get_move(&self, board: &mut Board) -> Option<usize> {
+            self.search.get_move(board)
+        }
+
+        fn get_move_with_timeout(&self, board: &mut Board, timeout: Duration) -> Option<usize> {
+            self.search.get_move_with_timeout(board, timeout)
+        }
+    }
+    enum TurnOrder {
+        P1IsBlack,
+        P1IsWhite,
+    }
+    enum PlayResult {
+        P1Win,
+        P2Win,
+        Draw,
+    }
+    fn play_game_with_timeout(
+        p1: Box<dyn Player>,
+        p2: Box<dyn Player>,
+        timeout: Duration,
+        turn_order: TurnOrder,
+    ) -> PlayResult {
+        let p1_turn = match turn_order {
+            TurnOrder::P1IsBlack => Turn::Black,
+            TurnOrder::P1IsWhite => Turn::White,
+        };
+        let mut board = Board::new();
+        let mut rng = rand::thread_rng();
+        while !board.is_game_over() {
+            if board.is_pass() {
+                board.do_pass().unwrap();
+                continue;
+            }
+
+            // for variety
+            if rng.gen_bool(EPSILON) {
+                let action = board.get_random_move().unwrap();
+                board.do_move(action).unwrap();
+                continue;
+            }
+
+            if board.get_turn() == p1_turn {
+                let action = p1.get_move_with_timeout(&mut board, timeout).unwrap();
+                board.do_move(action).unwrap();
+            } else {
+                let action = p2.get_move_with_timeout(&mut board, timeout).unwrap();
+                board.do_move(action).unwrap();
+            }
+        }
+        let winner = board.get_winner().unwrap();
+        match winner {
+            Some(turn) => match turn == p1_turn {
+                true => PlayResult::P1Win,
+                false => PlayResult::P2Win,
+            },
+            None => PlayResult::Draw,
+        }
+    }
 
     #[test]
     fn random_vs_piece() {
@@ -161,5 +247,45 @@ mod tests {
                 board.do_move(m).unwrap();
             }
         }
+    }
+
+    #[test]
+    fn random_vs_mcts() {
+        let timeout = std::time::Duration::from_millis(10);
+        let mut random_wins = 0;
+        let mut mcts_wins = 0;
+        for _ in 0..N_GAMES / 2 {
+            let random_player = RandomPlayer {};
+            let mcts_player = SearchPlayer {
+                search: Box::new(MctsSearch::new(1000, 1.0, 10)),
+            };
+            let result = play_game_with_timeout(
+                Box::new(random_player),
+                Box::new(mcts_player),
+                timeout,
+                TurnOrder::P1IsBlack,
+            );
+            match result {
+                PlayResult::P1Win => random_wins += 1,
+                PlayResult::P2Win => mcts_wins += 1,
+                PlayResult::Draw => (),
+            }
+            let random_player = RandomPlayer {};
+            let mcts_player = SearchPlayer {
+                search: Box::new(MctsSearch::new(1000, 1.0, 10)),
+            };
+            let result = play_game_with_timeout(
+                Box::new(mcts_player),
+                Box::new(random_player),
+                timeout,
+                TurnOrder::P1IsWhite,
+            );
+            match result {
+                PlayResult::P1Win => mcts_wins += 1,
+                PlayResult::P2Win => random_wins += 1,
+                PlayResult::Draw => (),
+            }
+        }
+        assert!(mcts_wins > random_wins);
     }
 }

@@ -8,6 +8,7 @@ pub use evaluator::Evaluator;
 pub use evaluator::LegalNumEvaluator;
 pub use evaluator::MatrixEvaluator;
 pub use evaluator::PieceEvaluator;
+pub use mcts::MctsSearch;
 
 use crate::board::Board;
 
