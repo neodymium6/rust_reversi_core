@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::board::Board;
 use crate::search::evaluator::Evaluator;
@@ -9,7 +9,7 @@ use crate::utils::StackVec64;
 #[derive(Debug)]
 pub struct AlphaBetaSearch {
     max_depth: usize,
-    evaluator: Rc<dyn Evaluator>,
+    evaluator: Arc<dyn Evaluator>,
     win_score: i32,
     margin_time: f64,
 }
@@ -25,7 +25,7 @@ impl AlphaBetaSearch {
     /// # Note
     /// * The win_score is used to determine the score of the win.
     /// * The win_score must be greater than any possible score.
-    pub fn new(max_depth: usize, evaluator: Rc<dyn Evaluator>, win_score: i32) -> Self {
+    pub fn new(max_depth: usize, evaluator: Arc<dyn Evaluator>, win_score: i32) -> Self {
         Self {
             max_depth,
             evaluator,

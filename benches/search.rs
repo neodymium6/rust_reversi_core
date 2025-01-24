@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use criterion::black_box;
 use criterion::{criterion_group, criterion_main, Criterion};
@@ -30,11 +30,11 @@ fn play_with_search(search: &dyn Search) {
 }
 
 fn get_alpha_beta4_piece() -> AlphaBetaSearch {
-    AlphaBetaSearch::new(4, Rc::new(PieceEvaluator::new()), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(PieceEvaluator::new()), 1 << 10)
 }
 
 fn get_alpha_beta4_legal_num() -> AlphaBetaSearch {
-    AlphaBetaSearch::new(4, Rc::new(LegalNumEvaluator::new()), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(LegalNumEvaluator::new()), 1 << 10)
 }
 
 fn get_alpha_beta4_matrix() -> AlphaBetaSearch {
@@ -49,7 +49,7 @@ fn get_alpha_beta4_matrix() -> AlphaBetaSearch {
         [100, -20, 10, 5, 5, 10, -20, 100],
     ]);
     let evaluator = MatrixEvaluator::new(matrix);
-    AlphaBetaSearch::new(4, Rc::new(evaluator), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(evaluator), 1 << 10)
 }
 
 #[derive(Debug)]
@@ -61,7 +61,7 @@ impl Evaluator for CustomEvaluator {
 }
 
 fn get_alpha_beta4_custom() -> AlphaBetaSearch {
-    AlphaBetaSearch::new(4, Rc::new(CustomEvaluator {}), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(CustomEvaluator {}), 1 << 10)
 }
 
 fn get_alpha_beta4_bitmatrix5() -> AlphaBetaSearch {
@@ -74,7 +74,7 @@ fn get_alpha_beta4_bitmatrix5() -> AlphaBetaSearch {
     ]);
     let weights: Vec<i32> = black_box(vec![-1, 1, 1, -2, -2]);
     let evaluator = BitMatrixEvaluator::<5>::new(weights, masks);
-    AlphaBetaSearch::new(4, Rc::new(evaluator), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(evaluator), 1 << 10)
 }
 
 fn get_alpha_beta4_bitmatrix5n() -> AlphaBetaSearch {
@@ -87,7 +87,7 @@ fn get_alpha_beta4_bitmatrix5n() -> AlphaBetaSearch {
     ]);
     let weights: Vec<i32> = black_box(vec![-1, -1, -1, -2, -2]);
     let evaluator = BitMatrixEvaluator::<5>::new(weights, masks);
-    AlphaBetaSearch::new(4, Rc::new(evaluator), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(evaluator), 1 << 10)
 }
 
 fn get_alpha_beta4_bitmatrix10() -> AlphaBetaSearch {
@@ -105,7 +105,7 @@ fn get_alpha_beta4_bitmatrix10() -> AlphaBetaSearch {
     ]);
     let weights: Vec<i32> = black_box(vec![-1, -1, -1, -2, -2, -50, 5, 10, -20, 100]);
     let evaluator = BitMatrixEvaluator::<10>::new(weights, masks);
-    AlphaBetaSearch::new(4, Rc::new(evaluator), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(evaluator), 1 << 10)
 }
 
 fn get_alpha_beta4_matrixs() -> AlphaBetaSearch {
@@ -120,7 +120,7 @@ fn get_alpha_beta4_matrixs() -> AlphaBetaSearch {
         [40, 1, 4, 0, 0, 4, 1, 40],
     ]);
     let evaluator = MatrixEvaluator::new(matrix);
-    AlphaBetaSearch::new(4, Rc::new(evaluator), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(evaluator), 1 << 10)
 }
 
 fn get_alpha_beta4_bitmatrix10s() -> AlphaBetaSearch {
@@ -138,7 +138,7 @@ fn get_alpha_beta4_bitmatrix10s() -> AlphaBetaSearch {
     ]);
     let weights: Vec<i32> = black_box(vec![0, 0, -1, -6, -8, -12, 0, 4, 1, 40]);
     let evaluator = BitMatrixEvaluator::<10>::new(weights, masks);
-    AlphaBetaSearch::new(4, Rc::new(evaluator), 1 << 10)
+    AlphaBetaSearch::new(4, Arc::new(evaluator), 1 << 10)
 }
 
 fn criterion_benchmark(c: &mut Criterion) {

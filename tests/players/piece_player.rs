@@ -3,7 +3,7 @@ use rust_reversi_core::board::{Board, Turn};
 use rust_reversi_core::search::PieceEvaluator;
 use rust_reversi_core::search::{AlphaBetaSearch, Search};
 use std::env;
-use std::rc::Rc;
+use std::sync::Arc;
 
 const EPSILON: f64 = 1e-2;
 
@@ -39,7 +39,7 @@ fn main() {
                 }
             } else {
                 let evaluator = PieceEvaluator::new();
-                let search = AlphaBetaSearch::new(depth, Rc::new(evaluator), 1 << 10);
+                let search = AlphaBetaSearch::new(depth, Arc::new(evaluator), 1 << 10);
                 let m = search.get_move(&mut board);
                 if m.is_none() {
                     eprintln!("No legal moves");

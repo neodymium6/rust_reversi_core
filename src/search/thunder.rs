@@ -2,7 +2,7 @@ use crate::board::Board;
 use crate::search::time_keeper::TimeKeeper;
 use crate::search::Search;
 use rand::Rng;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::time::Duration;
 
 use super::winrate_evaluator::WinrateEvaluator;
@@ -10,14 +10,14 @@ use super::winrate_evaluator::WinrateEvaluator;
 struct ThunderNode {
     board: Board,
     epsilon: f64,
-    evaluator: Rc<dyn WinrateEvaluator>,
+    evaluator: Arc<dyn WinrateEvaluator>,
     w: f64,
     n_visits: usize,
     children: Option<Vec<ThunderNode>>,
 }
 
 impl ThunderNode {
-    fn new(board: Board, epsilon: f64, evaluator: Rc<dyn WinrateEvaluator>) -> Self {
+    fn new(board: Board, epsilon: f64, evaluator: Arc<dyn WinrateEvaluator>) -> Self {
         Self {
             board,
             epsilon,
@@ -47,7 +47,7 @@ impl ThunderNode {
         }
     }
 
-    fn score_board(board: &mut Board, evaluator: &Rc<dyn WinrateEvaluator>) -> f64 {
+    fn score_board(board: &mut Board, evaluator: &Arc<dyn WinrateEvaluator>) -> f64 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
                 (Ok(true), _) => return 1.0,
@@ -115,7 +115,7 @@ impl ThunderNode {
 pub struct ThunderSearch {
     n_playouts: usize,
     epsilon: f64,
-    evaluator: Rc<dyn WinrateEvaluator>,
+    evaluator: Arc<dyn WinrateEvaluator>,
     margin_time: f64,
     check_interval: usize,
 }
@@ -129,7 +129,7 @@ impl ThunderSearch {
     /// * `expansion_threshold` - The number of visits to expand the node.
     /// # Returns
     /// A new MctsSearch instance.
-    pub fn new(n_playouts: usize, epsilon: f64, evaluator: Rc<dyn WinrateEvaluator>) -> Self {
+    pub fn new(n_playouts: usize, epsilon: f64, evaluator: Arc<dyn WinrateEvaluator>) -> Self {
         Self {
             n_playouts,
             epsilon,
