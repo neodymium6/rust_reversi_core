@@ -241,4 +241,28 @@ impl Search for ThunderSearch {
         let legal_moves = board.get_legal_moves_vec();
         Some(legal_moves[best_child_index])
     }
+
+    /// Get the search score for the given board.
+    /// # Arguments
+    /// * `board` - The board to search.
+    /// # Returns
+    /// The search score.
+    /// # Note
+    /// The search score is the winrate of the best move.
+    /// The search will be stopped when the number of playouts is reached.
+    fn get_search_score(&self, board: &mut Board) -> f64 {
+        if board.is_game_over() {
+            return match (board.is_win(), board.is_lose()) {
+                (Ok(true), _) => 1.0,
+                (_, Ok(true)) => 0.0,
+                _ => 0.5,
+            };
+        }
+        let mut root = ThunderNode::new(board.clone(), self.epsilon, self.evaluator.clone());
+        root.expand();
+        for _ in 0..self.n_playouts {
+            root.evaluate();
+        }
+        root.w / root.n_visits as f64
+    }
 }
