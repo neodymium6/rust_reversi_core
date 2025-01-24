@@ -160,6 +160,7 @@ impl MctsSearch {
 }
 
 const MARGIN_TIME: f64 = 0.0011;
+const CHECK_INTERVAL: usize = 100;
 impl Search for MctsSearch {
     /// Get the best move for the given board.
     /// # Arguments
@@ -202,10 +203,9 @@ impl Search for MctsSearch {
         root.expand();
         let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
         let time_keeper = TimeKeeper::new(Duration::from_secs_f64(search_duration));
-        let check_interval = (self.n_playouts / 100).clamp(100, 10000);
         for i in 0..self.n_playouts {
             root.evaluate();
-            if i % check_interval == 0 && time_keeper.is_timeout() {
+            if i % CHECK_INTERVAL == 0 && time_keeper.is_timeout() {
                 break;
             }
         }
