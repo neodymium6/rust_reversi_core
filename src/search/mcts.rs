@@ -115,7 +115,7 @@ impl MctsNode {
                 self.expand();
             }
 
-            return value;
+            value
         } else {
             let child_index = self.select_child_index();
             let value = 1.0 - self.children.as_mut().unwrap()[child_index].evaluate();
@@ -126,6 +126,7 @@ impl MctsNode {
     }
 }
 
+/// The Monte Carlo Tree Search Search.
 #[derive(Debug)]
 pub struct MctsSearch {
     n_playouts: usize,
@@ -266,5 +267,29 @@ impl Search for MctsSearch {
         }
         let legal_moves = board.get_legal_moves_vec();
         Some(legal_moves[best_child_index])
+    }
+
+    /// Get the search score for the given board.
+    /// # Arguments
+    /// * `board` - The board to search.
+    /// # Returns
+    /// The search score.
+    /// # Note
+    /// The search score is the win rate of the best move.
+    /// The win rate is calculated by the number of wins divided by the number of visits.
+    fn get_search_score(&self, board: &mut Board) -> f64 {
+        if board.is_game_over() {
+            return match (board.is_win(), board.is_lose()) {
+                (Ok(true), _) => 1.0,
+                (_, Ok(true)) => 0.0,
+                _ => 0.5,
+            };
+        }
+        let mut root = MctsNode::new(board.clone(), self.c, self.expansion_threshold);
+        root.expand();
+        for _ in 0..self.n_playouts {
+            root.evaluate();
+        }
+        root.w / root.n_visits as f64
     }
 }
