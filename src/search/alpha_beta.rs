@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::board::Board;
 use crate::search::evaluator::Evaluator;
 use crate::search::time_keeper::TimeKeeper;
@@ -7,7 +9,7 @@ use crate::utils::StackVec64;
 #[derive(Debug)]
 pub struct AlphaBetaSearch {
     max_depth: usize,
-    evaluator: Box<dyn Evaluator>,
+    evaluator: Rc<dyn Evaluator>,
 }
 
 impl AlphaBetaSearch {
@@ -17,7 +19,7 @@ impl AlphaBetaSearch {
     /// * `evaluator` - The evaluator to evaluate the board.
     /// # Returns
     /// A new AlphaBetaSearch instance.
-    pub fn new(max_depth: usize, evaluator: Box<dyn Evaluator>) -> Self {
+    pub fn new(max_depth: usize, evaluator: Rc<dyn Evaluator>) -> Self {
         Self {
             max_depth,
             evaluator,
