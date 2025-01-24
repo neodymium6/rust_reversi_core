@@ -10,6 +10,7 @@ use crate::utils::StackVec64;
 pub struct AlphaBetaSearch {
     max_depth: usize,
     evaluator: Rc<dyn Evaluator>,
+    margin_time: f64,
 }
 
 impl AlphaBetaSearch {
@@ -23,6 +24,7 @@ impl AlphaBetaSearch {
         Self {
             max_depth,
             evaluator,
+            margin_time: DEFAULT_MARGIN_TIME,
         }
     }
 
@@ -192,9 +194,19 @@ impl AlphaBetaSearch {
         }
         best_move
     }
+
+    /// Set the margin time for the search.
+    pub fn set_margin_time(&mut self, margin_time: f64) {
+        self.margin_time = margin_time;
+    }
+
+    /// Get the margin time for the search.
+    pub fn get_margin_time(&self) -> f64 {
+        self.margin_time
+    }
 }
 
-const MARGIN_TIME: f64 = 0.005;
+const DEFAULT_MARGIN_TIME: f64 = 0.005;
 impl Search for AlphaBetaSearch {
     /// Get the best move for the given board.
     /// # Arguments
@@ -234,7 +246,7 @@ impl Search for AlphaBetaSearch {
         timeout: std::time::Duration,
     ) -> Option<usize> {
         let mut best_move = None;
-        let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
+        let search_duration = timeout.as_secs_f64() - self.margin_time;
         let time_keeper = TimeKeeper::new(std::time::Duration::from_secs_f64(search_duration));
         for depth in 0..self.max_depth {
             let move_i = self.get_move_with_timeout_inner(board, depth, &time_keeper);
