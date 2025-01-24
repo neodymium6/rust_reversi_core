@@ -75,6 +75,40 @@ impl MatrixEvaluator {
     pub fn new(matrix: [[i32; 8]; 8]) -> Self {
         Self { matrix }
     }
+
+    /// Create a new MatrixEvaluator instance with the symmetry matrix.
+    /// # Returns
+    /// A new MatrixEvaluator<10> instance.
+    /// # Note
+    /// * The matrix must be symmetric.
+    pub fn to_bit_matrix_evaluator(&self) -> BitMatrixEvaluator<10> {
+        let masks: Vec<u64> = vec![
+            0x0000001818000000,
+            0x0000182424180000,
+            0x0000240000240000,
+            0x0018004242001800,
+            0x0024420000422400,
+            0x0042000000004200,
+            0x1800008181000018,
+            0x2400810000810024,
+            0x4281000000008142,
+            0x8100000000000081,
+        ];
+        let weights = vec![
+            self.matrix[3][3],
+            self.matrix[3][2],
+            self.matrix[2][2],
+            self.matrix[3][1],
+            self.matrix[2][1],
+            self.matrix[1][1],
+            self.matrix[3][0],
+            self.matrix[2][0],
+            self.matrix[1][0],
+            self.matrix[0][0],
+        ];
+
+        BitMatrixEvaluator::new(weights, masks)
+    }
 }
 
 impl Evaluator for MatrixEvaluator {
