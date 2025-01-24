@@ -126,6 +126,7 @@ impl MctsNode {
     }
 }
 
+#[derive(Debug)]
 pub struct MctsSearch {
     n_playouts: usize,
     c: f64,

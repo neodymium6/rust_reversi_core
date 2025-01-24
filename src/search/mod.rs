@@ -4,6 +4,8 @@ mod mcts;
 mod thunder;
 mod time_keeper;
 mod winrate_evaluator;
+use std::fmt::Debug;
+
 pub use alpha_beta::AlphaBetaSearch;
 pub use evaluator::BitMatrixEvaluator;
 pub use evaluator::Evaluator;
@@ -16,7 +18,7 @@ pub use winrate_evaluator::WinrateEvaluator;
 
 use crate::board::Board;
 
-pub trait Search {
+pub trait Search: Debug {
     fn get_move(&self, board: &mut Board) -> Option<usize>;
     fn get_move_with_timeout(
         &self,

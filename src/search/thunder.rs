@@ -111,6 +111,7 @@ impl ThunderNode {
     }
 }
 
+#[derive(Debug)]
 pub struct ThunderSearch {
     n_playouts: usize,
     epsilon: f64,

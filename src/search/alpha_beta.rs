@@ -4,6 +4,7 @@ use crate::search::time_keeper::TimeKeeper;
 use crate::search::Search;
 use crate::utils::StackVec64;
 
+#[derive(Debug)]
 pub struct AlphaBetaSearch {
     max_depth: usize,
     evaluator: Box<dyn Evaluator>,
