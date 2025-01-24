@@ -3,6 +3,7 @@ use rust_reversi_core::board::{Board, Turn};
 use rust_reversi_core::search::MatrixEvaluator;
 use rust_reversi_core::search::{AlphaBetaSearch, Search};
 use std::env;
+use std::rc::Rc;
 
 const EPSILON: f64 = 1e-2;
 const MATRIX: [[i32; 8]; 8] = [
@@ -48,7 +49,7 @@ fn main() {
                 }
             } else {
                 let evaluator = MatrixEvaluator::new(MATRIX);
-                let search = AlphaBetaSearch::new(depth, Box::new(evaluator));
+                let search = AlphaBetaSearch::new(depth, Rc::new(evaluator));
                 let m = search.get_move(&mut board);
                 if m.is_none() {
                     eprintln!("No legal moves");
