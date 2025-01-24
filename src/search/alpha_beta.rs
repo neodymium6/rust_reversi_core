@@ -275,4 +275,25 @@ impl Search for AlphaBetaSearch {
         }
         best_move
     }
+
+    /// Get the search score for the given board.
+    /// # Arguments
+    /// * `board` - The board to search the score.
+    /// # Returns
+    /// The search score.
+    /// # Note
+    /// The search score is the score of the best move.
+    fn get_search_score(&self, board: &mut Board) -> f64 {
+        let mut alpha = i32::MIN + 1;
+        let beta = i32::MAX - 1;
+        for &move_i in &self.get_legal_moves_vec_ordered(board).unwrap() {
+            let mut new_board = board.clone();
+            new_board.do_move(move_i).unwrap();
+            let score = -self.get_search_score(&mut new_board, self.max_depth, -beta, -alpha);
+            if score > alpha {
+                alpha = score;
+            }
+        }
+        alpha as f64
+    }
 }
