@@ -10,6 +10,7 @@ use crate::utils::StackVec64;
 pub struct AlphaBetaSearch {
     max_depth: usize,
     evaluator: Rc<dyn Evaluator>,
+    win_score: i32,
     margin_time: f64,
 }
 
@@ -18,12 +19,17 @@ impl AlphaBetaSearch {
     /// # Arguments
     /// * `max_depth` - The maximum depth of the search tree.
     /// * `evaluator` - The evaluator to evaluate the board.
+    /// * `win_score` - The score of the win.
     /// # Returns
     /// A new AlphaBetaSearch instance.
-    pub fn new(max_depth: usize, evaluator: Rc<dyn Evaluator>) -> Self {
+    /// # Note
+    /// * The win_score is used to determine the score of the win.
+    /// * The win_score must be greater than any possible score.
+    pub fn new(max_depth: usize, evaluator: Rc<dyn Evaluator>, win_score: i32) -> Self {
         Self {
             max_depth,
             evaluator,
+            win_score,
             margin_time: DEFAULT_MARGIN_TIME,
         }
     }
@@ -38,11 +44,21 @@ impl AlphaBetaSearch {
         self.max_depth = max_depth;
     }
 
+    /// Get the win score.
+    pub fn get_win_score(&self) -> i32 {
+        self.win_score
+    }
+
+    /// Set the win score.
+    pub fn set_win_score(&mut self, win_score: i32) {
+        self.win_score = win_score;
+    }
+
     fn score_board(&self, board: &mut Board) -> i32 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
-                (Ok(true), _) => return i32::MAX - 2,
-                (_, Ok(true)) => return i32::MIN + 2,
+                (Ok(true), _) => return self.win_score,
+                (_, Ok(true)) => return -self.win_score,
                 _ => return 0,
             }
         }
@@ -77,8 +93,8 @@ impl AlphaBetaSearch {
     fn get_search_score(&self, board: &mut Board, depth: usize, alpha: i32, beta: i32) -> i32 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
-                (Ok(true), _) => return i32::MAX - 2,
-                (_, Ok(true)) => return i32::MIN + 2,
+                (Ok(true), _) => return self.win_score,
+                (_, Ok(true)) => return -self.win_score,
                 _ => return 0,
             }
         }
@@ -122,8 +138,8 @@ impl AlphaBetaSearch {
     ) -> i32 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
-                (Ok(true), _) => return i32::MAX - 2,
-                (_, Ok(true)) => return i32::MIN + 2,
+                (Ok(true), _) => return self.win_score,
+                (_, Ok(true)) => return -self.win_score,
                 _ => return 0,
             }
         }

@@ -49,7 +49,7 @@ fn main() {
                 }
             } else {
                 let evaluator = MatrixEvaluator::new(MATRIX);
-                let search = AlphaBetaSearch::new(depth, Rc::new(evaluator));
+                let search = AlphaBetaSearch::new(depth, Rc::new(evaluator), 1 << 10);
                 let m = search.get_move(&mut board);
                 if m.is_none() {
                     eprintln!("No legal moves");

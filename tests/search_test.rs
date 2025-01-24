@@ -183,7 +183,7 @@ mod tests {
     fn iter_deepening() {
         let evaluator = PieceEvaluator::new();
         let depth = 60;
-        let search = AlphaBetaSearch::new(depth, Rc::new(evaluator));
+        let search = AlphaBetaSearch::new(depth, Rc::new(evaluator), 1 << 10);
         let mut board = Board::new();
 
         let timeout = 0.01;
@@ -218,7 +218,7 @@ mod tests {
         ];
         let matrix_evaluator = MatrixEvaluator::new(matrix);
         let depth = 0;
-        let matrix_search = AlphaBetaSearch::new(depth, Rc::new(matrix_evaluator));
+        let matrix_search = AlphaBetaSearch::new(depth, Rc::new(matrix_evaluator), 1 << 10);
         let masks: Vec<u64> = vec![
             0x0000001818000000,
             0x0000182424180000,
@@ -233,7 +233,7 @@ mod tests {
         ];
         let weights: Vec<i32> = vec![-1, -1, -1, -2, -2, -50, 5, 10, -20, 100];
         let bitmatrix_evaluator = BitMatrixEvaluator::<10>::new(weights, masks);
-        let bitmatrix_search = AlphaBetaSearch::new(depth, Rc::new(bitmatrix_evaluator));
+        let bitmatrix_search = AlphaBetaSearch::new(depth, Rc::new(bitmatrix_evaluator), 1 << 10);
         for _ in 0..1000 {
             let mut board = Board::new();
             while !board.is_game_over() {
