@@ -25,4 +25,5 @@ pub trait Search: Debug {
         board: &mut Board,
         timeout: std::time::Duration,
     ) -> Option<usize>;
+    fn get_search_score(&self, board: &mut Board) -> f64;
 }
