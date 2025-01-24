@@ -1,6 +1,7 @@
 use crate::board::Board;
 use crate::search::time_keeper::TimeKeeper;
 use crate::search::Search;
+use rand::Rng;
 use std::rc::Rc;
 use std::time::Duration;
 
@@ -8,6 +9,7 @@ use super::winrate_evaluator::WinrateEvaluator;
 
 struct ThunderNode {
     board: Board,
+    epsilon: f64,
     evaluator: Rc<dyn WinrateEvaluator>,
     w: f64,
     n_visits: usize,
@@ -15,9 +17,10 @@ struct ThunderNode {
 }
 
 impl ThunderNode {
-    fn new(board: Board, evaluator: Rc<dyn WinrateEvaluator>) -> Self {
+    fn new(board: Board, epsilon: f64, evaluator: Rc<dyn WinrateEvaluator>) -> Self {
         Self {
             board,
+            epsilon,
             evaluator,
             w: 0.0,
             n_visits: 0,
@@ -30,13 +33,17 @@ impl ThunderNode {
             self.children = Some(
                 children
                     .into_iter()
-                    .map(|b| ThunderNode::new(b, self.evaluator.clone()))
+                    .map(|b| ThunderNode::new(b, self.epsilon, self.evaluator.clone()))
                     .collect(),
             );
         } else {
             let mut board = self.board.clone();
             board.do_pass().unwrap();
-            self.children = Some(vec![ThunderNode::new(board, self.evaluator.clone())]);
+            self.children = Some(vec![ThunderNode::new(
+                board,
+                self.epsilon,
+                self.evaluator.clone(),
+            )]);
         }
     }
 
@@ -56,6 +63,10 @@ impl ThunderNode {
             if child.n_visits == 0 {
                 return i;
             }
+        }
+        let mut rng = rand::thread_rng();
+        if rng.gen_bool(self.epsilon) {
+            return rng.gen_range(0..self.children.as_ref().unwrap().len());
         }
         let mut best_child_index = 0;
         let mut best_thunder_score = f64::NEG_INFINITY;
@@ -102,6 +113,7 @@ impl ThunderNode {
 
 pub struct ThunderSearch {
     n_playouts: usize,
+    epsilon: f64,
     evaluator: Rc<dyn WinrateEvaluator>,
 }
 
@@ -114,9 +126,10 @@ impl ThunderSearch {
     /// * `expansion_threshold` - The number of visits to expand the node.
     /// # Returns
     /// A new MctsSearch instance.
-    pub fn new(n_playouts: usize, evaluator: Rc<dyn WinrateEvaluator>) -> Self {
+    pub fn new(n_playouts: usize, epsilon: f64, evaluator: Rc<dyn WinrateEvaluator>) -> Self {
         Self {
             n_playouts,
+            epsilon,
             evaluator,
         }
     }
@@ -143,7 +156,7 @@ impl Search for ThunderSearch {
     /// `Some(usize)` - The best move.
     /// `None` - player must pass.
     fn get_move(&self, board: &mut Board) -> Option<usize> {
-        let mut root = ThunderNode::new(board.clone(), self.evaluator.clone());
+        let mut root = ThunderNode::new(board.clone(), self.epsilon, self.evaluator.clone());
         root.expand();
         for _ in 0..self.n_playouts {
             root.evaluate();
@@ -172,7 +185,7 @@ impl Search for ThunderSearch {
     /// The search will be stopped when the timeout is reached or the number of playouts is reached.
     /// If you want to stop the search when the timeout is reached, set the timeout to a bigger value.
     fn get_move_with_timeout(&self, board: &mut Board, timeout: Duration) -> Option<usize> {
-        let mut root = ThunderNode::new(board.clone(), self.evaluator.clone());
+        let mut root = ThunderNode::new(board.clone(), self.epsilon, self.evaluator.clone());
         root.expand();
         let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
         let time_keeper = TimeKeeper::new(Duration::from_secs_f64(search_duration));
