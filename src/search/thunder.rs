@@ -115,6 +115,8 @@ pub struct ThunderSearch {
     n_playouts: usize,
     epsilon: f64,
     evaluator: Rc<dyn WinrateEvaluator>,
+    margin_time: f64,
+    check_interval: usize,
 }
 
 impl ThunderSearch {
@@ -131,6 +133,8 @@ impl ThunderSearch {
             n_playouts,
             epsilon,
             evaluator,
+            margin_time: DEFAULT_MARGIN_TIME,
+            check_interval: DEFAULT_CHECK_INTERVAL,
         }
     }
 
@@ -143,10 +147,40 @@ impl ThunderSearch {
     pub fn set_n_playouts(&mut self, n_playouts: usize) {
         self.n_playouts = n_playouts;
     }
+
+    /// Get the exploration parameter.
+    pub fn get_epsilon(&self) -> f64 {
+        self.epsilon
+    }
+
+    /// Set the exploration parameter.
+    pub fn set_epsilon(&mut self, epsilon: f64) {
+        self.epsilon = epsilon;
+    }
+
+    /// Get margin time.
+    pub fn get_margin_time(&self) -> f64 {
+        self.margin_time
+    }
+
+    /// Set margin time.
+    pub fn set_margin_time(&mut self, margin_time: f64) {
+        self.margin_time = margin_time;
+    }
+
+    /// Get check interval.
+    pub fn get_check_interval(&self) -> usize {
+        self.check_interval
+    }
+
+    /// Set check interval.
+    pub fn set_check_interval(&mut self, check_interval: usize) {
+        self.check_interval = check_interval;
+    }
 }
 
-const MARGIN_TIME: f64 = 0.0011;
-const CHECK_INTERVAL: usize = 100;
+const DEFAULT_MARGIN_TIME: f64 = 0.0011;
+const DEFAULT_CHECK_INTERVAL: usize = 100;
 impl Search for ThunderSearch {
     /// Get the best move for the given board.
     /// # Arguments
@@ -187,11 +221,11 @@ impl Search for ThunderSearch {
     fn get_move_with_timeout(&self, board: &mut Board, timeout: Duration) -> Option<usize> {
         let mut root = ThunderNode::new(board.clone(), self.epsilon, self.evaluator.clone());
         root.expand();
-        let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
+        let search_duration = timeout.as_secs_f64() - self.margin_time;
         let time_keeper = TimeKeeper::new(Duration::from_secs_f64(search_duration));
         for i in 0..self.n_playouts {
             root.evaluate();
-            if i % CHECK_INTERVAL == 0 && time_keeper.is_timeout() {
+            if i % self.check_interval == 0 && time_keeper.is_timeout() {
                 break;
             }
         }
