@@ -2,6 +2,11 @@ use std::fmt::{Debug, Display};
 
 use crate::board::{Board, Color};
 
+/// Evaluator trait.
+/// # Note
+/// * The score is positive if the player is winning.
+/// * The score is negative if the opponent is winning.
+/// * The score is 0 if the game is draw.
 pub trait Evaluator: Send + Sync + Debug {
     fn evaluate(&self, board: &mut Board) -> i32;
 }
