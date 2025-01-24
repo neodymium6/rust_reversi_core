@@ -12,6 +12,7 @@ pub use evaluator::MatrixEvaluator;
 pub use evaluator::PieceEvaluator;
 pub use mcts::MctsSearch;
 pub use thunder::ThunderSearch;
+pub use winrate_evaluator::WinrateEvaluator;
 
 use crate::board::Board;
 
