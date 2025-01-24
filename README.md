@@ -81,7 +81,7 @@ use rust_reversi_core::search::{AlphaBetaSearch, MatrixEvaluator};
 
 // Setup evaluator and search
 let evaluator = MatrixEvaluator::new(matrix);
-let search = AlphaBetaSearch::new(depth, Box::new(evaluator));
+let search = AlphaBetaSearch::new(depth, Rc::new(evaluator));
 
 // Get best move
 let best_move = search.get_move(&board);
