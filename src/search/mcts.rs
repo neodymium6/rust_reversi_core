@@ -130,6 +130,8 @@ pub struct MctsSearch {
     n_playouts: usize,
     c: f64,
     expansion_threshold: usize,
+    margin_time: f64,
+    check_interval: usize,
 }
 
 impl MctsSearch {
@@ -138,6 +140,8 @@ impl MctsSearch {
     /// * `n_playouts` - The number of playouts to run.
     /// * `c` - The exploration parameter.
     /// * `expansion_threshold` - The number of visits to expand the node.
+    /// * `margin_time` - The margin time to stop the search.
+    /// * `check_interval` - The interval to check the timeout.
     /// # Returns
     /// A new MctsSearch instance.
     pub fn new(n_playouts: usize, c: f64, expansion_threshold: usize) -> Self {
@@ -145,6 +149,8 @@ impl MctsSearch {
             n_playouts,
             c,
             expansion_threshold,
+            margin_time: DEFAULT_MARGIN_TIME,
+            check_interval: DEFAULT_CHECK_INTERVAL,
         }
     }
 
@@ -157,10 +163,50 @@ impl MctsSearch {
     pub fn set_n_playouts(&mut self, n_playouts: usize) {
         self.n_playouts = n_playouts;
     }
+
+    /// Get the exploration parameter.
+    pub fn get_c(&self) -> f64 {
+        self.c
+    }
+
+    /// Set the exploration parameter.
+    pub fn set_c(&mut self, c: f64) {
+        self.c = c;
+    }
+
+    /// Get the number of visits to expand the node.
+    pub fn get_expansion_threshold(&self) -> usize {
+        self.expansion_threshold
+    }
+
+    /// Set the number of visits to expand the node.
+    pub fn set_expansion_threshold(&mut self, expansion_threshold: usize) {
+        self.expansion_threshold = expansion_threshold;
+    }
+
+    /// Get the margin time.
+    pub fn get_margin_time(&self) -> f64 {
+        self.margin_time
+    }
+
+    /// Set the margin time.
+    pub fn set_margin_time(&mut self, margin_time: f64) {
+        self.margin_time = margin_time;
+    }
+
+    /// Get the check interval.
+    pub fn get_check_interval(&self) -> usize {
+        self.check_interval
+    }
+
+    /// Set the check interval.
+    pub fn set_check_interval(&mut self, check_interval: usize) {
+        self.check_interval = check_interval;
+    }
 }
 
-const MARGIN_TIME: f64 = 0.0011;
-const CHECK_INTERVAL: usize = 100;
+const DEFAULT_MARGIN_TIME: f64 = 0.002;
+const DEFAULT_CHECK_INTERVAL: usize = 100;
 impl Search for MctsSearch {
     /// Get the best move for the given board.
     /// # Arguments
@@ -201,11 +247,11 @@ impl Search for MctsSearch {
     fn get_move_with_timeout(&self, board: &mut Board, timeout: Duration) -> Option<usize> {
         let mut root = MctsNode::new(board.clone(), self.c, self.expansion_threshold);
         root.expand();
-        let search_duration = timeout.as_secs_f64() - MARGIN_TIME;
+        let search_duration = timeout.as_secs_f64() - self.margin_time;
         let time_keeper = TimeKeeper::new(Duration::from_secs_f64(search_duration));
         for i in 0..self.n_playouts {
             root.evaluate();
-            if i % CHECK_INTERVAL == 0 && time_keeper.is_timeout() {
+            if i % self.check_interval == 0 && time_keeper.is_timeout() {
                 break;
             }
         }
