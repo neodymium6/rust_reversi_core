@@ -10,6 +10,7 @@ use crate::utils::StackVec64;
 pub struct AlphaBetaSearch {
     max_depth: usize,
     evaluator: Arc<dyn Evaluator>,
+    move_ordering_evaluator: Arc<dyn Evaluator>,
     win_score: i32,
     margin_time: f64,
 }
@@ -28,7 +29,8 @@ impl AlphaBetaSearch {
     pub fn new(max_depth: usize, evaluator: Arc<dyn Evaluator>, win_score: i32) -> Self {
         Self {
             max_depth,
-            evaluator,
+            evaluator: evaluator.clone(),
+            move_ordering_evaluator: evaluator,
             win_score,
             margin_time: DEFAULT_MARGIN_TIME,
         }
@@ -54,6 +56,17 @@ impl AlphaBetaSearch {
         self.win_score = win_score;
     }
 
+    /// Get move ordering evaluator.
+    pub fn get_move_ordering_evaluator(&self) -> Arc<dyn Evaluator> {
+        self.move_ordering_evaluator.clone()
+    }
+
+    /// Set move ordering evaluator.
+    pub fn set_move_ordering_evaluator(&mut self, evaluator: Arc<dyn Evaluator>) {
+        self.move_ordering_evaluator = evaluator;
+    }
+
+    // Evaluate for move ordering.
     fn score_board(&self, board: &mut Board) -> i32 {
         if board.is_game_over() {
             match (board.is_win(), board.is_lose()) {
@@ -62,7 +75,7 @@ impl AlphaBetaSearch {
                 _ => return 0,
             }
         }
-        self.evaluator.evaluate(board)
+        self.move_ordering_evaluator.evaluate(board)
     }
 
     fn get_child_boards_ordered(&self, board: &mut Board) -> Option<Vec<Board>> {
