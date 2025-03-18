@@ -370,12 +370,12 @@ impl Board {
 
     /// Get the legal moves for the player as a vector of positions
     pub fn get_legal_moves_vec(&mut self) -> StackVec64<usize> {
-        let legal_moves = self.get_legal_moves();
+        let mut legal_moves = self.get_legal_moves();
         let mut legal_moves_vec = StackVec64::new();
-        for (i, &bit) in BITS.iter().enumerate() {
-            if legal_moves & bit != 0 {
-                legal_moves_vec.push(i);
-            }
+        while legal_moves != 0 {
+            let lz = legal_moves.leading_zeros();
+            legal_moves_vec.push(lz as usize);
+            legal_moves &= !(1u64 << (63 - lz));
         }
         legal_moves_vec
     }
