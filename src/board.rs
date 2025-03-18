@@ -355,11 +355,7 @@ impl Board {
         (flip_l << shift) | (flip_r >> shift)
     }
 
-    /// Get the legal moves for the player as a bitboard
-    pub fn get_legal_moves(&mut self) -> u64 {
-        if let Some(legal_moves) = self.legal_moves_cache {
-            return legal_moves;
-        }
+    fn get_legal_moves_non_avx(&mut self) -> u64 {
         let mask = 0x7E_7E_7E_7E_7E_7E_7E_7E & self.opponent_board;
         let legal_moves = (Board::get_legal_partial(mask, self.player_board, 1)
             | Board::get_legal_partial(self.opponent_board, self.player_board, 8)
@@ -368,6 +364,112 @@ impl Board {
             & !(self.player_board | self.opponent_board);
         self.legal_moves_cache = Some(legal_moves);
         legal_moves
+    }
+
+    #[target_feature(enable = "avx2")]
+    unsafe fn get_moves_avx(pppp: __m256i, oooo: __m256i) -> u64 {
+        let shift1897 = _mm256_set_epi64x(7, 9, 8, 1);
+
+        // Apply edge masks to opponent's board to avoid wrap-around effects
+        let moo = _mm256_and_si256(
+            oooo,
+            _mm256_set_epi64x(
+                0x007E7E7E7E7E7E00, // Diagonal mask
+                0x007E7E7E7E7E7E00, // Diagonal mask
+                0x00FFFFFFFFFFFF00, // Vertical mask
+                0x7E7E7E7E7E7E7E7E, // Horizontal mask
+            ),
+        );
+
+        // Calculate occupied squares
+        let occupied = _mm_or_si128(_mm256_castsi256_si128(pppp), _mm256_castsi256_si128(oooo));
+
+        // Find potential flips in left direction
+        let mut flip_l = _mm256_and_si256(moo, _mm256_sllv_epi64(pppp, shift1897));
+        // Find potential flips in right direction
+        let mut flip_r = _mm256_and_si256(moo, _mm256_srlv_epi64(pppp, shift1897));
+
+        // Extend flips one step further
+        flip_l = _mm256_or_si256(
+            flip_l,
+            _mm256_and_si256(moo, _mm256_sllv_epi64(flip_l, shift1897)),
+        );
+        flip_r = _mm256_or_si256(
+            flip_r,
+            _mm256_and_si256(moo, _mm256_srlv_epi64(flip_r, shift1897)),
+        );
+
+        // Calculate pre-computed masks for further extension
+        let pre_l = _mm256_and_si256(moo, _mm256_sllv_epi64(moo, shift1897));
+        let pre_r = _mm256_srlv_epi64(pre_l, shift1897);
+
+        // Double shift amount for faster propagation
+        let shift2 = _mm256_add_epi64(shift1897, shift1897);
+
+        // Extend flips by double steps
+        flip_l = _mm256_or_si256(
+            flip_l,
+            _mm256_and_si256(pre_l, _mm256_sllv_epi64(flip_l, shift2)),
+        );
+        flip_r = _mm256_or_si256(
+            flip_r,
+            _mm256_and_si256(pre_r, _mm256_srlv_epi64(flip_r, shift2)),
+        );
+
+        // Extend flips by double steps once more
+        flip_l = _mm256_or_si256(
+            flip_l,
+            _mm256_and_si256(pre_l, _mm256_sllv_epi64(flip_l, shift2)),
+        );
+        flip_r = _mm256_or_si256(
+            flip_r,
+            _mm256_and_si256(pre_r, _mm256_srlv_epi64(flip_r, shift2)),
+        );
+
+        // Calculate move positions from flips
+        let mm = _mm256_or_si256(
+            _mm256_sllv_epi64(flip_l, shift1897),
+            _mm256_srlv_epi64(flip_r, shift1897),
+        );
+
+        // Combine 256-bit result into 128-bit
+        let m = _mm_or_si128(_mm256_castsi256_si128(mm), _mm256_extracti128_si256(mm, 1));
+
+        // Select only empty squares and combine the results
+        let result = _mm_andnot_si128(occupied, _mm_or_si128(m, _mm_unpackhi_epi64(m, m)));
+        _mm_cvtsi128_si64(result) as u64
+    }
+
+    #[target_feature(enable = "avx2")]
+    unsafe fn get_legal_moves_avx2(&mut self) -> u64 {
+        let player_vector = _mm256_set_epi64x(
+            self.player_board as i64,
+            self.player_board as i64,
+            self.player_board as i64,
+            self.player_board as i64,
+        );
+        let opponent_vector = _mm256_set_epi64x(
+            self.opponent_board as i64,
+            self.opponent_board as i64,
+            self.opponent_board as i64,
+            self.opponent_board as i64,
+        );
+
+        let legal_moves = Board::get_moves_avx(player_vector, opponent_vector);
+        self.legal_moves_cache = Some(legal_moves);
+        legal_moves
+    }
+
+    /// Get the legal moves for the player as a bitboard
+    pub fn get_legal_moves(&mut self) -> u64 {
+        if let Some(legal_moves) = self.legal_moves_cache {
+            return legal_moves;
+        }
+        if is_x86_feature_detected!("avx2") {
+            unsafe { self.get_legal_moves_avx2() }
+        } else {
+            self.get_legal_moves_non_avx()
+        }
     }
 
     /// Get the legal moves for the player as a vector of positions
