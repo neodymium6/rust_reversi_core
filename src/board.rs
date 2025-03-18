@@ -350,7 +350,7 @@ impl Board {
         flip_r |= (flip_r >> shift2) & watch_r;
         flip_l |= (flip_l << shift2) & watch_l;
         flip_r |= (flip_r >> shift2) & watch_r;
-        flip_l << shift | flip_r >> shift
+        (flip_l << shift) | (flip_r >> shift)
     }
 
     /// Get the legal moves for the player as a bitboard
