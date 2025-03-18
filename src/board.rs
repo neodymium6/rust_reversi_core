@@ -1,5 +1,7 @@
 use crate::utils::StackVec64;
+use crate::v8di::LRMASK;
 use core::fmt;
+use std::arch::x86_64::*;
 use std::hash::Hash;
 use std::mem::swap;
 
@@ -413,10 +415,7 @@ impl Board {
         Some(child_boards)
     }
 
-    /// Reverse the stones
-    /// # Arguments
-    /// * `pos` - Position to place the stone
-    pub fn reverse(&mut self, pos: u64) {
+    fn reverse_non_avx(&mut self, pos: u64) {
         let mut reversed: u64 = 0;
         // tmp is position of stones to reverse if piece exists on the end of stones to reverse
         // mask is position that exists opponent's stone to reverse from piece on each direction
@@ -456,6 +455,69 @@ impl Board {
         get_reverse_r!(0x00_FE_FE_FE_FE_FE_FE_FE, 7); // lower left
         self.player_board ^= reversed | pos;
         self.opponent_board ^= reversed;
+    }
+
+    #[target_feature(enable = "avx2")]
+    unsafe fn mm_flip(&self, pos: usize) -> u64 {
+        // Create a single 128-bit vector with player in low bits, opponent in high bits
+        let op = _mm_set_epi64x(self.opponent_board as i64, self.player_board as i64);
+        let pppp = _mm256_broadcastq_epi64(op);
+        let oooo = _mm256_broadcastq_epi64(_mm_unpackhi_epi64(op, op));
+
+        // Access LRMASK properly as two 256-bit values
+        let mask0 = _mm256_loadu_si256(LRMASK[pos].v.as_ptr() as *const __m256i);
+        let mask1 = _mm256_loadu_si256(LRMASK[pos].v.as_ptr().add(4) as *const __m256i);
+
+        // Right direction processing
+        let rp = _mm256_and_si256(pppp, mask0);
+        let mut rs = _mm256_or_si256(rp, _mm256_srlv_epi64(rp, _mm256_set_epi64x(7, 9, 8, 1)));
+        rs = _mm256_or_si256(rs, _mm256_srlv_epi64(rs, _mm256_set_epi64x(14, 18, 16, 2)));
+        rs = _mm256_or_si256(rs, _mm256_srlv_epi64(rs, _mm256_set_epi64x(28, 36, 32, 4)));
+
+        let re = _mm256_xor_si256(_mm256_andnot_si256(oooo, mask0), rp);
+        let mut flip = _mm256_and_si256(_mm256_andnot_si256(rs, mask0), _mm256_cmpgt_epi64(rp, re));
+
+        // Left direction processing
+        let mut lo = _mm256_andnot_si256(oooo, mask1);
+        lo = _mm256_and_si256(
+            _mm256_xor_si256(_mm256_add_epi64(lo, _mm256_set1_epi64x(-1)), lo),
+            mask1,
+        );
+
+        let lf = _mm256_andnot_si256(pppp, lo);
+        flip = _mm256_or_si256(flip, _mm256_andnot_si256(_mm256_cmpeq_epi64(lf, lo), lf));
+
+        // Combine results
+        let res128 = _mm_or_si128(
+            _mm256_castsi256_si128(flip),
+            _mm256_extracti128_si256(flip, 1),
+        );
+        _mm_extract_epi64(res128, 0) as u64 | _mm_extract_epi64(res128, 1) as u64
+    }
+
+    #[target_feature(enable = "avx2")]
+    unsafe fn reverse_avx2(&mut self, pos: u64) {
+        let position = pos.trailing_zeros() as usize;
+
+        // Get flipped discs using mm_flip
+        let flipped_bits = self.mm_flip(position);
+
+        // Update board state
+        self.player_board ^= flipped_bits | pos;
+        self.opponent_board ^= flipped_bits;
+    }
+
+    /// Reverse the stones
+    /// # Arguments
+    /// * `pos` - Position to place the stone as a bitboard
+    pub fn reverse(&mut self, pos: u64) {
+        if is_x86_feature_detected!("avx2") {
+            unsafe {
+                self.reverse_avx2(pos);
+            }
+        } else {
+            self.reverse_non_avx(pos);
+        }
     }
 
     /// Place the stone
